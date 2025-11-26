@@ -1,0 +1,3763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>破壁机助手</title>
+    
+    <!-- PWA 图标配置 -->
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3075/3075977.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3075/3075977.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://cdn-icons-png.flaticon.com/512/3075/3075977.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://cdn-icons-png.flaticon.com/512/3075/3075977.png">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#F2F2F7">
+    
+    <link rel="manifest" href='data:application/manifest+json,{
+        "name": "破壁机助手",
+        "short_name": "破壁机",
+        "start_url": ".",
+        "display": "standalone",
+        "orientation": "portrait",
+        "background_color": "#F2F2F7",
+        "theme_color": "#F2F2F7",
+        "icons": [{
+            "src": "https://cdn-icons-png.flaticon.com/512/3075/3075977.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }]
+    }'>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- 基础样式 --- */
+        :root {
+            --bg-color: #F2F2F7;
+            --card-bg: #FFFFFF;
+            --text-primary: #1C1C1E;
+            --text-secondary: #8E8E93;
+            --accent-color: #007AFF;
+            --danger-color: #FF3B30;
+            --warning-color: #FFCC00;
+            --radius-m: 12px;
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.06);
+            --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
+        
+        body {
+            margin: 0; padding: 0;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        .touch-scale { transition: transform 0.1s, opacity 0.1s; cursor: pointer; }
+        .touch-scale:active { transform: scale(0.96); opacity: 0.8; }
+
+        /* --- 顶部区域 --- */
+        .top-section {
+            background: var(--card-bg);
+            padding: calc(10px + var(--safe-top)) 16px 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            z-index: 10; flex-shrink: 0;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .app-header { display: flex; justify-content: space-between; align-items: center; }
+        .app-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 6px; color: var(--text-primary); }
+        .app-title i { color: var(--accent-color); font-size: 20px; }
+
+        .header-btns { display: flex; gap: 12px; }
+
+        .icon-btn {
+            font-size: 16px; color: var(--accent-color);
+            background: rgba(0,122,255,0.1);
+            width: 32px; height: 32px;
+            border-radius: 50%; border: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+        /* 移除之前的 feedback 特有颜色，保持统一蓝色 */
+
+        .action-bar { display: flex; gap: 10px; align-items: center; }
+        .search-container { flex: 1; position: relative; }
+        .search-input {
+            width: 100%; height: 36px; background: #E3E3E8;
+            border: none; border-radius: 10px; padding: 0 34px;
+            font-size: 14px; color: var(--text-primary);
+        }
+        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #8E8E93; font-size: 14px; }
+
+        /* 渐变色按钮 */
+        .lucky-btn {
+            height: 36px; padding: 0 14px;
+            background: linear-gradient(135deg, #FBBC04, #EA4335);
+            color: white; border-radius: 10px; border: none;
+            font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 4px;
+            white-space: nowrap; box-shadow: 0 2px 8px rgba(234, 67, 53, 0.3);
+        }
+
+        /* --- 内容区域 --- */
+        .bottom-section {
+            flex: 1; overflow-y: auto;
+            padding: 16px 12px calc(40px + var(--safe-bottom));
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .section-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; margin-left: 4px; }
+
+        .category-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 12px 8px; margin-bottom: 24px;
+        }
+        .cat-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .cat-icon-box {
+            width: 48px; height: 48px; background: var(--card-bg);
+            border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: var(--accent-color); box-shadow: var(--shadow-card);
+        }
+        .cat-name { font-size: 11px; font-weight: 500; color: var(--text-secondary); }
+        .cat-item.active .cat-icon-box { background: var(--accent-color); color: white; }
+
+        /* --- 列表样式 --- */
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px; }
+        .back-btn { background: none; border: none; color: var(--accent-color); font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 4px; }
+
+        .recipe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .recipe-card {
+            background: var(--card-bg); border-radius: var(--radius-m); padding: 12px;
+            box-shadow: var(--shadow-card); display: flex; flex-direction: column; min-height: 100px;
+        }
+        .rc-title { 
+            font-size: 15px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; color: var(--text-primary);
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .rc-desc { 
+            font-size: 11px; color: var(--text-secondary); 
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            line-height: 1.3; margin-bottom: 8px;
+        }
+        .rc-footer { margin-top: auto; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+        
+        /* 标签样式 */
+        .rc-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+        .tag-cat { color: var(--accent-color); background: rgba(0,122,255,0.08); }
+        .tag-taste { color: #FF9500; background: rgba(255, 149, 0, 0.1); }
+        
+        /* 星级和收藏 */
+        .rc-meta { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+        .rc-star { font-size: 10px; color: var(--warning-color); display: flex; align-items: center; gap: 1px; }
+
+        /* --- 我的页面 Tab --- */
+        .mine-tabs { display: flex; background: #E3E3E8; padding: 3px; border-radius: 10px; margin-bottom: 16px; }
+        .mine-tab {
+            flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 600;
+            border-radius: 8px; color: var(--text-secondary);
+        }
+        .mine-tab.active { background: white; color: var(--text-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        .mine-item {
+            background: white; padding: 14px; border-radius: 12px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow-card);
+        }
+
+        /* --- 弹窗 --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+            display: flex; align-items: flex-end;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .modal-sheet {
+            width: 100%; height: 90vh; background: var(--bg-color);
+            border-radius: 20px 20px 0 0; transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .modal-overlay.open .modal-sheet { transform: translateY(0); }
+
+        .sheet-header { 
+            background: var(--card-bg); padding: 14px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05); flex-shrink: 0;
+        }
+        .sheet-title { font-size: 16px; font-weight: 600; }
+        .close-btn { 
+            background: #E3E3E8; border: none; width: 28px; height: 28px; border-radius: 50%; 
+            color: var(--text-secondary); display: flex; align-items: center; justify-content: center; 
+        }
+        .sheet-content { flex: 1; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; }
+
+        /* --- 详情页 (定制版) --- */
+        .detail-title { font-size: 22px; font-weight: 700; margin-bottom: 10px; line-height: 1.2; }
+        .detail-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px; background: white; padding: 12px; border-radius: 12px; }
+
+        .section-head { font-size: 15px; font-weight: 600; margin: 24px 0 10px; display: flex; align-items: center; gap: 6px; color: var(--text-primary); }
+        .section-head i { color: var(--accent-color); }
+
+        .ing-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #E5E5EA; font-size: 15px; }
+        .step-row { display: flex; gap: 12px; margin-bottom: 16px; line-height: 1.5; font-size: 15px; }
+        .step-num { 
+            min-width: 22px; height: 22px; background: var(--text-primary); color: white; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+        }
+
+        .info-block { background: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 15px; color: var(--text-primary); line-height: 1.4; }
+
+        .rating-stars { display: flex; gap: 8px; justify-content: center; margin: 30px 0 10px; }
+        .star { font-size: 28px; color: #E0E0E0; }
+        .star.filled { color: var(--warning-color); }
+
+        /* --- 表单 --- */
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+        .form-input, .form-select, .form-area { 
+            width: 100%; padding: 12px; background: white; border: none; 
+            border-radius: 10px; font-size: 15px; font-family: inherit;
+        }
+        .form-area { height: 80px; resize: none; }
+        .btn-primary {
+            width: 100%; height: 48px; background: var(--accent-color); color: white;
+            border: none; border-radius: 12px; font-size: 16px; font-weight: 600; margin-top: 10px;
+        }
+
+        .swipe-hint {
+            text-align: center; font-size: 11px; color: #C7C7CC; margin-top: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+
+        .hidden { display: none !important; }
+        
+        /* 错误提示条 */
+        #error-bar {
+            position: fixed; top: 0; left: 0; right: 0; background: #FF3B30; color: white;
+            padding: 10px; font-size: 12px; text-align: center; z-index: 9999; display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="error-bar">JSON 数据格式错误！请检查粘贴的内容是否缺少逗号或括号。</div>
+
+    <!-- Top Section -->
+    <div class="top-section">
+        <div class="app-header">
+            <div class="app-title touch-scale" onclick="app.goHome()">
+                <i class="fa-solid fa-blender"></i> 破壁机助手
+            </div>
+            <div class="header-btns">
+                <!-- 意见反馈按钮 (现在和我的按钮颜色一致) -->
+                <button class="icon-btn touch-scale" onclick="app.openModal('feedbackModal')">
+                    <i class="fa-regular fa-comment-dots"></i>
+                </button>
+                <!-- 我的按钮 -->
+                <button class="icon-btn touch-scale" onclick="app.openMine()">
+                    <i class="fa-solid fa-user"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <div class="search-container">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" class="search-input" placeholder="搜索食材或功效" id="searchInput" autocomplete="off">
+            </div>
+            <button class="lucky-btn touch-scale" onclick="app.openModal('luckyModal')">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> 试试手气
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="bottom-section">
+        
+        <!-- Home View -->
+        <div id="homeView">
+            <div class="section-title">食谱分类</div>
+            <div class="category-grid" id="categoryGrid">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+
+        <!-- List View -->
+        <div id="listView" class="hidden">
+            <div class="list-header">
+                <button class="back-btn touch-scale" onclick="app.goHome()">
+                    <i class="fa-solid fa-chevron-left"></i> 返回
+                </button>
+                <span id="listTitle" style="font-weight:600; font-size:16px;">列表</span>
+            </div>
+            <div class="recipe-grid" id="recipeGrid">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+
+        <!-- Mine View -->
+        <div id="mineView" class="hidden">
+            <div class="list-header">
+                <button class="back-btn touch-scale" onclick="app.goHome()">
+                    <i class="fa-solid fa-chevron-left"></i> 返回首页
+                </button>
+            </div>
+            <div class="mine-tabs">
+                <div class="mine-tab active touch-scale" onclick="app.switchMineTab('fav', this)">我的收藏</div>
+                <div class="mine-tab touch-scale" onclick="app.switchMineTab('rate', this)">我的评价</div>
+                <div class="mine-tab touch-scale" onclick="app.switchMineTab('upload', this)">我上传的</div>
+            </div>
+            <div id="mineContent"></div>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Lucky Modal -->
+    <div class="modal-overlay" id="luckyModal">
+        <div class="modal-sheet">
+            <div class="sheet-header">
+                <div class="sheet-title">今天喝什么？</div>
+                <button class="close-btn touch-scale" onclick="app.closeModal('luckyModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="sheet-content">
+                <div class="form-group">
+                    <label class="form-label">现在的心情</label>
+                    <select class="form-select" id="luckyMood">
+                        <option value="random">🎲 随便来点</option>
+                        <option value="happy">😊 开心 (想吃甜的)</option>
+                        <option value="sad">😢 难过 (需要治愈)</option>
+                        <option value="tired">😫 疲惫 (补充维C)</option>
+                        <option value="fit">💪 健身 (高蛋白)</option>
+                        <option value="anxious">😰 焦虑 (需要降火)</option>
+                        <option value="bored">😐 无聊 (来点刺激)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">天气</label>
+                    <select class="form-select" id="luckyWeather">
+                        <option value="none">🌤️ 忽略天气</option>
+                        <option value="hot">🥵 炎热 (推荐冰饮)</option>
+                        <option value="cold">🥶 寒冷 (推荐热饮)</option>
+                        <option value="rainy">🌧️ 下雨 (祛湿)</option>
+                        <option value="windy">🍃 大风 (润燥)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">星座 (玄学推荐)</label>
+                    <select class="form-select" id="luckySign">
+                        <option value="none">✨ 随缘</option>
+                        <option value="fire">🔥 火象 (白羊/狮子/射手)</option>
+                        <option value="water">💧 水象 (巨蟹/天蝎/双鱼)</option>
+                        <option value="earth">⛰️ 土象 (金牛/处女/摩羯)</option>
+                        <option value="air">💨 风象 (双子/天秤/水瓶)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">生肖 (玄学推荐)</label>
+                    <select class="form-select" id="luckyZodiac">
+                        <option value="none">🐇 随缘</option>
+                        <option value="rat_pig">🐭 🐷 鼠/猪 (水)</option>
+                        <option value="tiger_rabbit">🐯 🐰 虎/兔 (木)</option>
+                        <option value="snake_horse">🐍 🐴 蛇/马 (火)</option>
+                        <option value="ox_dragon_goat_dog">🐮 🐲 🐐 🐶 牛/龙/羊/狗 (土)</option>
+                        <option value="monkey_rooster">🐵 🐔 猴/鸡 (金)</option>
+                    </select>
+                </div>
+                <div id="slotMachine" style="text-align:center; font-size:20px; font-weight:800; color:var(--accent-color); margin:30px 0; min-height:30px;"></div>
+                <button class="btn-primary touch-scale" id="luckyStartBtn" onclick="app.startLucky()">开始抽取</button>
+                <div class="swipe-hint"><i class="fa-solid fa-arrow-left"></i> 左滑关闭弹窗</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="modal-overlay" id="feedbackModal">
+        <div class="modal-sheet">
+            <div class="sheet-header">
+                <div class="sheet-title">意见反馈</div>
+                <button class="close-btn touch-scale" onclick="app.closeModal('feedbackModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="sheet-content">
+                <p style="color:var(--text-secondary); margin-bottom:16px;">发现Bug？想要新食谱？直接告诉主厨！</p>
+                <div class="form-group">
+                    <label class="form-label">您的建议</label>
+                    <textarea id="feedbackText" class="form-area" placeholder="请详细描述您的问题或建议..."></textarea>
+                </div>
+                <button class="btn-primary touch-scale" onclick="app.sendFeedback()">叫主厨过来</button>
+                <div class="swipe-hint"><i class="fa-solid fa-arrow-left"></i> 左滑关闭弹窗</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-sheet">
+            <div class="sheet-header">
+                <div style="width:28px"></div>
+                <div class="sheet-title" style="font-size:14px; color:var(--text-secondary)">食谱详情</div>
+                <button class="close-btn touch-scale" onclick="app.closeModal('detailModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="sheet-content" id="detailContent">
+                <!-- Injected -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div class="modal-overlay" id="reviewModal">
+        <div class="modal-sheet">
+            <div class="sheet-header">
+                <div class="sheet-title">评价食谱</div>
+                <button class="close-btn touch-scale" onclick="app.closeModal('reviewModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="sheet-content">
+                <p style="color:var(--text-secondary); margin-bottom:16px;">评分已保存。要发送详细评价给主厨吗？</p>
+                <textarea id="reviewText" class="form-area" placeholder="写点什么..."></textarea>
+                <div style="display:flex; gap:12px; margin-top:16px;">
+                    <button class="btn-primary touch-scale" style="background:white; color:var(--text-primary); border:1px solid #eee" onclick="app.closeModal('reviewModal')">取消</button>
+                    <button class="btn-primary touch-scale" onclick="app.sendReviewEmail()">发送邮件</button>
+                </div>
+                <div class="swipe-hint"><i class="fa-solid fa-arrow-left"></i> 左滑关闭弹窗</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal-sheet">
+            <div class="sheet-header">
+                <div class="sheet-title">上传食谱</div>
+                <button class="close-btn touch-scale" onclick="app.closeModal('uploadModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="sheet-content">
+                <div class="form-group">
+                    <label class="form-label">分类</label>
+                    <select id="upCat" class="form-select">
+                        <option>豆浆</option><option>米糊</option><option>果蔬</option><option>冰沙</option>
+                        <option>熬粥</option><option>花果茶</option><option>滋补汤</option><option>浓汤</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">名称</label>
+                    <input id="upName" class="form-input" placeholder="食谱名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">描述/功效</label>
+                    <textarea id="upDesc" class="form-area" placeholder="有什么功效？"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">食材</label>
+                    <textarea id="upIng" class="form-area" placeholder="例如：黄豆 30g..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">步骤</label>
+                    <textarea id="upStep" class="form-area" placeholder="1. ..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">档位 & 时间</label>
+                    <input id="upGear" class="form-input" placeholder="例如：豆浆模式 25分钟">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">味道</label>
+                    <input id="upTaste" class="form-input" placeholder="例如：香甜">
+                </div>
+                <button class="btn-primary touch-scale" onclick="app.submitUpload()">提交</button>
+                <div class="swipe-hint"><i class="fa-solid fa-arrow-left"></i> 左滑关闭弹窗</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局错误捕获
+        window.onerror = function() {
+            document.getElementById('error-bar').style.display = 'block';
+        };
+
+        // ==========================================
+        // 1. 数据源 (请在此处填入你的 JSON 数据)
+        // ==========================================
+        // 注意：请确保粘贴的格式正确，不要删除 const recipes = [ 和最后的 ];
+        const recipes = [
+  {
+    "id": 1001,
+    "category": "豆浆",
+    "name": "经典原味豆浆",
+    "description": "最纯正的豆香，富含优质植物蛋白，适合全家早餐。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "40g"},
+      {"item": "清水", "amount": "800ml"},
+      {"item": "冰糖", "amount": "10g"}
+    ],
+    "steps": [
+      "黄豆提前清洗干净（无需浸泡，干豆直打更香，湿豆更细腻，按需选择）。",
+      "将黄豆放入破壁机杯体。",
+      "加入清水至800ml刻度线。",
+      "启动机器，等待程序结束。",
+      "最后加入冰糖，利用余温融化即可。"
+    ],
+    "gear&time": "【豆浆/浓豆浆】模式 约25-30分钟",
+    "taste": "浓香★★★★★ | 甜度★☆☆ | 顺滑★★★★☆"
+  },
+  {
+    "id": 1002,
+    "category": "豆浆",
+    "name": "三黑养肾豆浆",
+    "description": "黑色入肾，乌发养颜，适合经常熬夜、脱发人群。",
+    "ingredients": [
+      {"item": "黑豆", "amount": "30g"},
+      {"item": "黑米", "amount": "20g"},
+      {"item": "黑芝麻", "amount": "10g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "黑豆、黑米洗净。",
+      "所有食材倒入破壁机。",
+      "加水至水位线。",
+      "选择对应模式启动。",
+      "完成后可加少许冰糖调味。"
+    ],
+    "gear&time": "【豆浆】模式 约28分钟",
+    "taste": "醇厚★★★★★ | 甜度★☆☆ | 香气★★★★★"
+  },
+  {
+    "id": 1003,
+    "category": "豆浆",
+    "name": "红枣枸杞豆浆",
+    "description": "补气养血，脸色红润，适合女性经期后饮用。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "30g"},
+      {"item": "红枣", "amount": "4颗"},
+      {"item": "枸杞", "amount": "10g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "红枣去核，黄豆洗净。",
+      "将黄豆、红枣肉放入破壁机。",
+      "加水启动机器。",
+      "程序剩余5分钟时或结束后放入枸杞（避免高温破坏营养）。"
+    ],
+    "gear&time": "【豆浆】模式 约25分钟",
+    "taste": "甜★★★★☆ | 豆香★★★☆☆ | 滋补★★★★☆"
+  },
+  {
+    "id": 1004,
+    "category": "豆浆",
+    "name": "核桃益智豆浆",
+    "description": "补脑益智，增强记忆力，适合学生和脑力工作者。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "30g"},
+      {"item": "核桃仁", "amount": "3个"},
+      {"item": "清水", "amount": "600ml"},
+      {"item": "冰糖", "amount": "适量"}
+    ],
+    "steps": [
+      "核桃去壳取仁，黄豆洗净。",
+      "全部食材放入破壁机。",
+      "加入清水。",
+      "启动豆浆模式。"
+    ],
+    "gear&time": "【豆浆】模式 约25分钟",
+    "taste": "坚果香★★★★☆ | 苦涩★☆☆ | 顺滑★★★★☆"
+  },
+  {
+    "id": 1005,
+    "category": "豆浆",
+    "name": "绿豆百合豆浆",
+    "description": "清热解毒，宁心安神，适合夏季或上火时饮用。",
+    "ingredients": [
+      {"item": "绿豆", "amount": "30g"},
+      {"item": "黄豆", "amount": "20g"},
+      {"item": "干百合", "amount": "10g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "绿豆、黄豆洗净，干百合提前浸泡20分钟。",
+      "所有食材放入杯体。",
+      "加水启动。"
+    ],
+    "gear&time": "【豆浆】模式 约25分钟",
+    "taste": "清爽★★★★★ | 豆香★★★☆☆ | 甜度★☆☆"
+  },
+  {
+    "id": 1006,
+    "category": "豆浆",
+    "name": "燕麦豆浆",
+    "description": "高膳食纤维，饱腹感强，适合减脂期代餐。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "30g"},
+      {"item": "即食燕麦", "amount": "20g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "黄豆洗净。",
+      "将黄豆和燕麦放入破壁机。",
+      "加水启动。",
+      "无需过滤，口感浓稠。"
+    ],
+    "gear&time": "【豆浆】模式 约20分钟",
+    "taste": "浓稠★★★★☆ | 麦香★★★★☆ | 饱腹★★★★★"
+  },
+  {
+    "id": 1007,
+    "category": "豆浆",
+    "name": "玫瑰美颜豆浆",
+    "description": "疏肝解郁，美容养颜，香气宜人。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "40g"},
+      {"item": "干玫瑰花", "amount": "5朵"},
+      {"item": "清水", "amount": "600ml"},
+      {"item": "红糖", "amount": "适量"}
+    ],
+    "steps": [
+      "黄豆洗净放入破壁机，加水打煮。",
+      "干玫瑰花只取花瓣。",
+      "豆浆打好后，撒入花瓣焖2分钟，或放入花瓣用【搅拌/清洗】键打10秒。",
+      "加入红糖调味。"
+    ],
+    "gear&time": "【豆浆】模式 25分钟 + 手动搅拌10秒",
+    "taste": "花香★★★★★ | 甜度★★☆☆ | 颜值★★★★★"
+  },
+  {
+    "id": 1008,
+    "category": "豆浆",
+    "name": "花生红枣豆浆",
+    "description": "补血益气，被称为植物奶，口感非常香浓。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "20g"},
+      {"item": "花生", "amount": "30g"},
+      {"item": "红枣", "amount": "3颗"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "红枣去核，花生黄豆洗净。",
+      "所有材料入机，加水。",
+      "启动豆浆模式。"
+    ],
+    "gear&time": "【豆浆】模式 约25分钟",
+    "taste": "香浓★★★★★ | 甜度★★★☆☆ | 顺滑★★★★☆"
+  },
+  {
+    "id": 1009,
+    "category": "豆浆",
+    "name": "小米南瓜豆浆",
+    "description": "养胃护胃，色泽金黄，口感丝滑。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "20g"},
+      {"item": "小米", "amount": "20g"},
+      {"item": "南瓜", "amount": "50g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "南瓜去皮切块，豆米洗净。",
+      "放入破壁机加水。",
+      "启动模式。"
+    ],
+    "gear&time": "【豆浆/米糊】模式 均可 约25分钟",
+    "taste": "细腻★★★★★ | 甜度★★☆☆ | 豆香★★☆☆"
+  },
+  {
+    "id": 1010,
+    "category": "豆浆",
+    "name": "红豆薏米豆浆",
+    "description": "祛湿消肿，美白滋润，适合雨季或体内湿气重时。",
+    "ingredients": [
+      {"item": "红豆", "amount": "20g"},
+      {"item": "薏米", "amount": "20g"},
+      {"item": "黄豆", "amount": "10g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "薏米建议提前干锅炒黄（去寒性）。",
+      "所有豆类洗净。",
+      "入机加水，启动。"
+    ],
+    "gear&time": "【豆浆】模式 约30分钟",
+    "taste": "清淡★★★☆☆ | 甜度★☆☆ | 回甘★★☆☆"
+  },
+  {
+    "id": 1011,
+    "category": "豆浆",
+    "name": "紫薯山药豆浆",
+    "description": "富含花青素，抗氧化，健脾养胃。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "30g"},
+      {"item": "紫薯", "amount": "40g"},
+      {"item": "山药", "amount": "30g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "紫薯山药去皮切小块。",
+      "黄豆洗净。",
+      "一同放入破壁机加水。"
+    ],
+    "gear&time": "【豆浆】模式 约25分钟",
+    "taste": "浓稠★★★★☆ | 甜度★★☆☆ | 颜值★★★★★"
+  },
+  {
+    "id": 1012,
+    "category": "豆浆",
+    "name": "杏仁银耳豆浆",
+    "description": "润肺止咳，滋阴润燥，适合秋季。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "30g"},
+      {"item": "南杏仁", "amount": "10g"},
+      {"item": "银耳", "amount": "1/4朵"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "银耳泡发撕小朵，杏仁洗净。",
+      "所有食材入机。",
+      "银耳胶质丰富，注意水位不要太高防溢。"
+    ],
+    "gear&time": "【豆浆】模式 约25分钟",
+    "taste": "顺滑★★★★★ | 杏香★★★★☆ | 润喉★★★★★"
+  },
+  {
+    "id": 1013,
+    "category": "豆浆",
+    "name": "五谷丰登豆浆",
+    "description": "营养全面，一键补充多种谷物精华。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "15g"},
+      {"item": "黑豆", "amount": "15g"},
+      {"item": "红豆", "amount": "15g"},
+      {"item": "花生", "amount": "10g"},
+      {"item": "燕麦", "amount": "10g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "所有杂粮洗净。",
+      "混合放入破壁机。",
+      "加水启动。"
+    ],
+    "gear&time": "【五谷浆/豆浆】模式 约30分钟",
+    "taste": "醇厚★★★★★ | 饱腹★★★★☆ | 豆香★★★★☆"
+  },
+  {
+    "id": 1014,
+    "category": "豆浆",
+    "name": "黑芝麻红枣豆浆",
+    "description": "乌发补血双效合一，香气浓郁。",
+    "ingredients": [
+      {"item": "黑芝麻", "amount": "20g"},
+      {"item": "黄豆", "amount": "30g"},
+      {"item": "红枣", "amount": "4颗"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "红枣去核。",
+      "熟黑芝麻更香（如果是生芝麻可一起煮）。",
+      "加水启动。"
+    ],
+    "gear&time": "【豆浆】模式 约25分钟",
+    "taste": "香气★★★★★ | 甜度★★★☆☆ | 顺滑★★★☆☆"
+  },
+  {
+    "id": 1015,
+    "category": "豆浆",
+    "name": "抹茶豆浆",
+    "description": "清新抗氧化，日式风味，提神醒脑。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "40g"},
+      {"item": "抹茶粉", "amount": "5g"},
+      {"item": "清水", "amount": "600ml"},
+      {"item": "代糖/冰糖", "amount": "适量"}
+    ],
+    "steps": [
+      "黄豆先行用豆浆模式煮熟打磨。",
+      "程序结束后，加入抹茶粉和糖。",
+      "使用点动/清洗键搅拌30秒混匀即可。"
+    ],
+    "gear&time": "【豆浆】模式 + 手动搅拌",
+    "taste": "茶香★★★★☆ | 甜度★★☆☆ | 清新★★★★★"
+  },
+  {
+    "id": 1016,
+    "category": "豆浆",
+    "name": "红枣桂圆豆浆",
+    "description": "温补心脾，安神助眠，适合手脚冰凉者。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "30g"},
+      {"item": "桂圆肉", "amount": "10g"},
+      {"item": "红枣", "amount": "3颗"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "桂圆去壳去核，红枣去核。",
+      "与黄豆一同入机。",
+      "桂圆自带甜味，可不加糖。"
+    ],
+    "gear&time": "【豆浆】模式 约25分钟",
+    "taste": "甜度★★★★☆ | 豆香★★★☆☆ | 温润★★★★☆"
+  },
+  {
+    "id": 1017,
+    "category": "豆浆",
+    "name": "香芋紫米豆浆",
+    "description": "口感绵密如甜品，碳水满足感强。",
+    "ingredients": [
+      {"item": "荔浦芋头", "amount": "40g"},
+      {"item": "紫米", "amount": "20g"},
+      {"item": "黄豆", "amount": "20g"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "芋头去皮切块（注意戴手套）。",
+      "食材洗净入机。",
+      "加水启动。"
+    ],
+    "gear&time": "【豆浆】模式 约25分钟",
+    "taste": "绵密★★★★★ | 香甜★★★☆☆ | 饱腹★★★★☆"
+  },
+  {
+    "id": 1018,
+    "category": "豆浆",
+    "name": "板栗燕麦豆浆",
+    "description": "秋季限定口味，补肾强筋，香甜可口。",
+    "ingredients": [
+      {"item": "熟板栗仁", "amount": "5颗"},
+      {"item": "黄豆", "amount": "20g"},
+      {"item": "燕麦", "amount": "15g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "板栗剥壳，建议用熟板栗更香粉。",
+      "所有食材混合。",
+      "加水启动。"
+    ],
+    "gear&time": "【豆浆】模式 约25分钟",
+    "taste": "粉糯★★★★☆ | 甜度★★☆☆ | 坚果香★★★☆☆"
+  },
+  {
+    "id": 1019,
+    "category": "豆浆",
+    "name": "可可豆乳",
+    "description": "孩子最爱，像热巧克力的健康版。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "40g"},
+      {"item": "可可粉", "amount": "10g"},
+      {"item": "牛奶", "amount": "100ml"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "黄豆加清水先用豆浆模式打好。",
+      "程序结束后加入牛奶和可可粉。",
+      "手动搅拌1分钟至混合均匀。"
+    ],
+    "gear&time": "【豆浆】模式 + 手动搅拌",
+    "taste": "香浓★★★★★ | 苦甜★★☆☆ | 丝滑★★★★☆"
+  },
+  {
+    "id": 1020,
+    "category": "豆浆",
+    "name": "莲子茯苓豆浆",
+    "description": "健脾祛湿，清心安神，食疗佳品。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "30g"},
+      {"item": "莲子", "amount": "10g"},
+      {"item": "茯苓块", "amount": "5g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "莲子去芯（否则会苦）。",
+      "茯苓稍微浸泡清洗。",
+      "一同入机加水。"
+    ],
+    "gear&time": "【豆浆】模式 约28分钟",
+    "taste": "清淡★★★☆☆ | 药膳感★☆☆ | 回甘★★☆☆"
+  },
+  {
+    "id": 1021,
+    "category": "豆浆",
+    "name": "奇亚籽高蛋白豆浆",
+    "description": "超级食物加持，高蛋白低碳水，健身人士首选。",
+    "ingredients": [
+      {"item": "黑豆", "amount": "40g"},
+      {"item": "奇亚籽", "amount": "10g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "黑豆洗净入机打煮。",
+      "豆浆打好后，加入奇亚籽。",
+      "搅拌几秒或利用余温焖熟即可，保留奇亚籽口感。"
+    ],
+    "gear&time": "【豆浆】模式",
+    "taste": "颗粒感★★★☆☆ | 豆香★★★★☆ | 饱腹★★★★★"
+  },
+  {
+    "id": 2001,
+    "category": "米糊",
+    "name": "南瓜小米糊",
+    "description": "经典养胃食谱，口感如奶油般细腻，金黄诱人。",
+    "ingredients": [
+      {"item": "老南瓜", "amount": "200g"},
+      {"item": "小米", "amount": "30g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "南瓜去皮去瓤切小块。",
+      "小米洗净。",
+      "一同放入破壁机，加水至刻度线。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "甜★★★★☆ | 细腻★★★★★ | 清香★★★☆☆"
+  },
+  {
+    "id": 2002,
+    "category": "米糊",
+    "name": "紫薯燕麦米糊",
+    "description": "低脂饱腹，梦幻紫色，减脂期主食替代。",
+    "ingredients": [
+      {"item": "紫薯", "amount": "100g"},
+      {"item": "大米", "amount": "20g"},
+      {"item": "燕麦", "amount": "20g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "紫薯去皮切丁。",
+      "米类洗净。",
+      "所有食材放入破壁机。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "浓稠★★★★☆ | 甜度★★☆☆ | 颜值★★★★★"
+  },
+  {
+    "id": 2003,
+    "category": "米糊",
+    "name": "健脾山药米糊",
+    "description": "健脾益胃，口感顺滑，适合老人小孩。",
+    "ingredients": [
+      {"item": "铁棍山药", "amount": "100g"},
+      {"item": "小米", "amount": "20g"},
+      {"item": "大米", "amount": "20g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "山药去皮切段（注意戴手套防痒）。",
+      "米洗净。",
+      "混合入机，加水。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "清淡★★★★★ | 顺滑★★★★★ | 饱腹★★★☆☆"
+  },
+  {
+    "id": 2004,
+    "category": "米糊",
+    "name": "黑芝麻糊",
+    "description": "传统中式甜品，乌发养肾，香气扑鼻。",
+    "ingredients": [
+      {"item": "熟黑芝麻", "amount": "50g"},
+      {"item": "糯米", "amount": "30g"},
+      {"item": "红枣", "amount": "2颗"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "加糯米是为了增加粘稠度。",
+      "红枣去核。",
+      "所有食材入机，喜欢甜可多加糖。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "香浓★★★★★ | 甜度★★★★☆ | 浓稠★★★★★"
+  },
+  {
+    "id": 2005,
+    "category": "米糊",
+    "name": "红豆红枣米糊",
+    "description": "补血养颜，气色红润，口感沙沙的。",
+    "ingredients": [
+      {"item": "红豆", "amount": "40g"},
+      {"item": "红枣", "amount": "4颗"},
+      {"item": "糯米", "amount": "10g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "红豆建议提前浸泡一晚更易打烂。",
+      "红枣去核。",
+      "所有食材放入破壁机。"
+    ],
+    "gear&time": "【米糊】或【豆浆】模式 约30分钟",
+    "taste": "甜★★★☆☆ | 沙感★★★★☆ | 豆香★★★☆☆"
+  },
+  {
+    "id": 2006,
+    "category": "米糊",
+    "name": "美白杏仁米糊",
+    "description": "富含维生素E，滋润美白，润肺平喘。",
+    "ingredients": [
+      {"item": "南杏仁", "amount": "20g"},
+      {"item": "大米", "amount": "30g"},
+      {"item": "牛奶", "amount": "100ml"},
+      {"item": "清水", "amount": "400ml"}
+    ],
+    "steps": [
+      "杏仁和大米洗净放入破壁机，加清水。",
+      "启动米糊模式。",
+      "程序结束后倒入牛奶搅拌均匀。"
+    ],
+    "gear&time": "【米糊】模式 25分钟",
+    "taste": "杏香★★★★★ | 顺滑★★★★☆ | 奶香★★★☆☆"
+  },
+  {
+    "id": 2007,
+    "category": "米糊",
+    "name": "玉米汁米糊",
+    "description": "饭店同款，香甜浓郁，大人小孩都爱。",
+    "ingredients": [
+      {"item": "甜玉米粒", "amount": "150g"},
+      {"item": "小米", "amount": "20g"},
+      {"item": "大米", "amount": "10g"},
+      {"item": "清水", "amount": "500ml"},
+      {"item": "牛奶", "amount": "100ml"}
+    ],
+    "steps": [
+      "玉米剥粒（用鲜玉米最好）。",
+      "加入米类增加稠度。",
+      "加入清水和牛奶（或最后加奶）。"
+    ],
+    "gear&time": "【玉米汁/米糊】模式 约20分钟",
+    "taste": "甜★★★★★ | 清香★★★★☆ | 细腻★★★★★"
+  },
+  {
+    "id": 2008,
+    "category": "米糊",
+    "name": "胡萝卜苹果米糊",
+    "description": "补充维生素A和C，护眼开胃，酸甜可口。",
+    "ingredients": [
+      {"item": "胡萝卜", "amount": "80g"},
+      {"item": "苹果", "amount": "半个"},
+      {"item": "小米", "amount": "20g"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "胡萝卜切丁，苹果去皮去核切块。",
+      "小米洗净。",
+      "一同打煮，苹果煮熟后酸味会减弱，更柔和。"
+    ],
+    "gear&time": "【米糊】模式 约20分钟",
+    "taste": "果香★★★☆☆ | 酸甜★★☆☆ | 清爽★★★★☆"
+  },
+  {
+    "id": 2009,
+    "category": "米糊",
+    "name": "绿豆百合莲子糊",
+    "description": "清热降火，夏天必备，细腻爽口。",
+    "ingredients": [
+      {"item": "绿豆", "amount": "40g"},
+      {"item": "莲子", "amount": "10g"},
+      {"item": "百合", "amount": "5g"},
+      {"item": "大米", "amount": "10g"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "绿豆洗净，莲子去芯。",
+      "加入大米是为了口感不分离。",
+      "加水启动。"
+    ],
+    "gear&time": "【米糊/绿豆沙】模式 约25分钟",
+    "taste": "清爽★★★★★ | 沙感★★★☆☆ | 甜度★☆☆"
+  },
+  {
+    "id": 2010,
+    "category": "米糊",
+    "name": "板栗红薯米糊",
+    "description": "双重碳水快乐，香甜软糯，秋季暖胃。",
+    "ingredients": [
+      {"item": "红薯", "amount": "80g"},
+      {"item": "板栗仁", "amount": "4个"},
+      {"item": "小米", "amount": "20g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "红薯去皮切块。",
+      "所有食材放入破壁机。",
+      "加水启动。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "甜★★★★☆ | 浓稠★★★★☆ | 暖胃★★★★★"
+  },
+  {
+    "id": 2011,
+    "category": "米糊",
+    "name": "核桃花生露",
+    "description": "比买的更香浓，真材实料，补脑益智。",
+    "ingredients": [
+      {"item": "核桃仁", "amount": "3个"},
+      {"item": "花生", "amount": "30g"},
+      {"item": "糯米", "amount": "20g"},
+      {"item": "牛奶", "amount": "200ml"},
+      {"item": "清水", "amount": "300ml"}
+    ],
+    "steps": [
+      "花生核桃洗净，糯米增稠。",
+      "先加水煮打。",
+      "最后加入牛奶搅拌均匀。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "香浓★★★★★ | 顺滑★★★★☆ | 坚果香★★★★★"
+  },
+  {
+    "id": 2012,
+    "category": "米糊",
+    "name": "燕麦香蕉奶糊",
+    "description": "润肠通便，能量满满，早餐佳选。",
+    "ingredients": [
+      {"item": "香蕉", "amount": "1根"},
+      {"item": "即食燕麦", "amount": "30g"},
+      {"item": "牛奶", "amount": "200ml"},
+      {"item": "清水", "amount": "100ml"}
+    ],
+    "steps": [
+      "香蕉去皮掰断。",
+      "此方可做热饮也可做温饮。",
+      "如果是熟燕麦，可选择【加热/搅拌】功能，不用煮太久。"
+    ],
+    "gear&time": "【米糊】模式 或 手动加热搅拌5分钟",
+    "taste": "甜★★★★☆ | 浓稠★★★★☆ | 奶香★★★★☆"
+  },
+  {
+    "id": 2013,
+    "category": "米糊",
+    "name": "红枣银耳羹",
+    "description": "平民燕窝，补充胶原蛋白，粘稠拉丝。",
+    "ingredients": [
+      {"item": "干银耳", "amount": "1/3朵"},
+      {"item": "红枣", "amount": "4颗"},
+      {"item": "枸杞", "amount": "少许"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "银耳充分泡发撕小块。",
+      "红枣去核。",
+      "破壁机打碎后银耳胶质更容易释放。",
+      "注意防溢。"
+    ],
+    "gear&time": "【米糊/滋补糊】模式 约30分钟",
+    "taste": "顺滑★★★★★ | 甜度★★★☆☆ | 胶质感★★★★★"
+  },
+  {
+    "id": 2014,
+    "category": "米糊",
+    "name": "糙米红薯糊",
+    "description": "粗粮细作，低GI饮食，控制血糖。",
+    "ingredients": [
+      {"item": "糙米", "amount": "30g"},
+      {"item": "红薯", "amount": "50g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "糙米较硬，建议提前浸泡2小时。",
+      "红薯切块。",
+      "入机打煮。"
+    ],
+    "gear&time": "【米糊】模式 约30分钟",
+    "taste": "粗粮感★★☆☆ | 甜度★★☆☆ | 饱腹★★★★★"
+  },
+  {
+    "id": 2015,
+    "category": "米糊",
+    "name": "蓝莓紫薯米糊",
+    "description": "护眼抗氧化，酸甜开胃，颜色梦幻。",
+    "ingredients": [
+      {"item": "紫薯", "amount": "60g"},
+      {"item": "蓝莓", "amount": "10颗"},
+      {"item": "大米", "amount": "20g"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "紫薯去皮，大米洗净。",
+      "先煮紫薯和大米。",
+      "程序结束后加入新鲜蓝莓，利用余温搅拌30秒（避免高温破坏花青素）。"
+    ],
+    "gear&time": "【米糊】模式 + 搅拌",
+    "taste": "酸甜★★★☆☆ | 颜值★★★★★ | 细腻★★★☆☆"
+  },
+  {
+    "id": 2016,
+    "category": "米糊",
+    "name": "花生糯米糊",
+    "description": "满口留香，滋养脾胃，暖心热饮。",
+    "ingredients": [
+      {"item": "花生", "amount": "50g"},
+      {"item": "糯米", "amount": "30g"},
+      {"item": "清水", "amount": "600ml"},
+      {"item": "冰糖", "amount": "适量"}
+    ],
+    "steps": [
+      "花生去皮（红衣也可留），去皮后颜色更白。",
+      "糯米增加粘性。",
+      "加水启动。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "香浓★★★★★ | 浓稠★★★★☆ | 甜度★★★☆☆"
+  },
+  {
+    "id": 2017,
+    "category": "米糊",
+    "name": "雪梨百合米糊",
+    "description": "润肺清燥，止咳化痰，适合干燥季节。",
+    "ingredients": [
+      {"item": "雪梨", "amount": "1个"},
+      {"item": "干百合", "amount": "10g"},
+      {"item": "小米", "amount": "20g"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "雪梨去皮去核切块。",
+      "小米百合洗净。",
+      "入机打煮。"
+    ],
+    "gear&time": "【米糊】模式 约20分钟",
+    "taste": "清甜★★★★☆ | 润喉★★★★★ | 细腻★★★☆☆"
+  },
+  {
+    "id": 2018,
+    "category": "米糊",
+    "name": "鲜藕米糊",
+    "description": "养阴清热，凉血止血，口感清香。",
+    "ingredients": [
+      {"item": "莲藕", "amount": "100g"},
+      {"item": "大米", "amount": "20g"},
+      {"item": "花生", "amount": "10g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "莲藕去皮切丁。",
+      "花生增香，大米增稠。",
+      "加水启动。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "清香★★★★☆ | 甜度★☆☆ | 顺滑★★★☆☆"
+  },
+  {
+    "id": 2019,
+    "category": "米糊",
+    "name": "椰香南瓜糊",
+    "description": "东南亚风味，椰香浓郁，甜而不腻。",
+    "ingredients": [
+      {"item": "南瓜", "amount": "150g"},
+      {"item": "小米", "amount": "20g"},
+      {"item": "椰浆/椰粉", "amount": "50ml/20g"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "南瓜小米加水煮打。",
+      "程序结束前5分钟或结束后加入椰浆。",
+      "搅拌均匀。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "椰香★★★★★ | 甜度★★★☆☆ | 异域风情★★★★☆"
+  },
+  {
+    "id": 2020,
+    "category": "米糊",
+    "name": "菠菜瘦肉米糊",
+    "description": "咸口米糊，补铁补充维生素，适合宝宝辅食。",
+    "ingredients": [
+      {"item": "大米", "amount": "40g"},
+      {"item": "菠菜", "amount": "2颗"},
+      {"item": "瘦肉沫", "amount": "20g"},
+      {"item": "清水", "amount": "600ml"},
+      {"item": "盐", "amount": "少许"}
+    ],
+    "steps": [
+      "瘦肉焯水去腥。",
+      "菠菜焯水去草酸。",
+      "所有食材入机，加水煮打。",
+      "出锅加少许盐调味。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "咸鲜★★★☆☆ | 细腻★★★★☆ | 营养★★★★★"
+  },
+  {
+    "id": 2021,
+    "category": "米糊",
+    "name": "三色藜麦米糊",
+    "description": "全营养明星，高蛋白，坚果清香。",
+    "ingredients": [
+      {"item": "三色藜麦", "amount": "30g"},
+      {"item": "小米", "amount": "20g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "藜麦洗净（有的藜麦需要多洗几次去皂苷）。",
+      "与小米一同入机。",
+      "启动机器。"
+    ],
+    "gear&time": "【米糊】模式 约25分钟",
+    "taste": "清香★★★☆☆ | 甜度★☆☆ | 颗粒感★☆☆"
+  },
+   {
+    "id": 3001,
+    "category": "果蔬",
+    "name": "番茄蜂蜜汁",
+    "description": "美白抗氧化，补充茄红素，酸甜开胃。",
+    "ingredients": [{"item": "番茄", "amount": "2个"}, {"item": "蜂蜜", "amount": "1勺"}, {"item": "凉白开", "amount": "300ml"}],
+    "steps": ["番茄洗净切块。", "加入凉白开。", "启动机器。", "打好后调入蜂蜜。"],
+    "gear&time": "【果蔬】模式 或 手动7档 持续60秒",
+    "taste": "酸甜★★★☆☆ | 清爽★★★★☆ | 鲜美★★★☆☆"
+  },
+  {
+    "id": 3002,
+    "category": "果蔬",
+    "name": "黄瓜雪梨汁",
+    "description": "清热降火，刮油解腻，适合餐后饮用。",
+    "ingredients": [{"item": "黄瓜", "amount": "1根"}, {"item": "雪梨", "amount": "1个"}, {"item": "凉白开", "amount": "300ml"}],
+    "steps": ["黄瓜洗净切段，雪梨去皮去核。", "放入破壁机，加水。", "启动机器。"],
+    "gear&time": "【果蔬】模式 或 手动7档 持续60秒",
+    "taste": "清香★★★★★ | 甜度★★☆☆ | 解腻★★★★★"
+  },
+  {
+    "id": 3003,
+    "category": "果蔬",
+    "name": "胡萝卜橙汁",
+    "description": "补充维生素C和胡萝卜素，护眼美肤，色泽鲜艳。",
+    "ingredients": [{"item": "胡萝卜", "amount": "半根"}, {"item": "橙子", "amount": "1个"}, {"item": "凉白开", "amount": "300ml"}],
+    "steps": ["胡萝卜切片焯水。", "橙子去皮去籽。", "混合打汁。"],
+    "gear&time": "【果蔬】模式 或 手动9档 持续90秒",
+    "taste": "甜★★★☆☆ | 清新★★★★☆ | 顺滑★★★☆☆"
+  },
+  {
+    "id": 3004,
+    "category": "果蔬",
+    "name": "西芹苹果汁",
+    "description": "降血压，高纤维助消化，被称为“瘦身水”。",
+    "ingredients": [{"item": "西芹", "amount": "2瓣"}, {"item": "苹果", "amount": "1个"}, {"item": "凉白开", "amount": "300ml"}],
+    "steps": ["西芹洗净切段，去掉老筋。", "苹果去核切块。", "入机打汁。"],
+    "gear&time": "【果蔬】模式 或 手动9档 持续90秒",
+    "taste": "清香★★★★☆ | 草本味★★☆☆ | 甜度★★☆☆"
+  },
+  {
+    "id": 3005,
+    "category": "果蔬",
+    "name": "火龙果香蕉汁",
+    "description": "润肠通便神器，颜色紫红诱人，口感浓稠。",
+    "ingredients": [{"item": "红心火龙果", "amount": "半个"}, {"item": "香蕉", "amount": "1根"}, {"item": "纯净水/牛奶", "amount": "200ml"}],
+    "steps": ["水果去皮切块。", "启动机器。"],
+    "gear&time": "【果蔬】模式 或 手动5档 持续40秒",
+    "taste": "甜★★★★☆ | 顺滑★★★★★ | 饱腹★★★★☆"
+  },
+  {
+    "id": 3006,
+    "category": "果蔬",
+    "name": "紫甘蓝雪梨汁",
+    "description": "富含花青素，抗衰老，雪梨能压住紫甘蓝的生味。",
+    "ingredients": [{"item": "紫甘蓝", "amount": "2片"}, {"item": "雪梨", "amount": "1个"}, {"item": "凉白开", "amount": "300ml"}, {"item": "柠檬汁", "amount": "几滴"}],
+    "steps": ["紫甘蓝洗净撕小块，雪梨切块。", "加几滴柠檬汁。", "搅打细腻。"],
+    "gear&time": "【果蔬】模式 或 手动8档 持续60秒",
+    "taste": "清爽★★★☆☆ | 甜度★★☆☆ | 颜值★★★★★"
+  },
+  {
+    "id": 3007,
+    "category": "果蔬",
+    "name": "苦瓜蜂蜜柠檬汁",
+    "description": "清热去火，排毒养颜，适合夏天。",
+    "ingredients": [{"item": "苦瓜", "amount": "1/4根"}, {"item": "柠檬", "amount": "2片"}, {"item": "蜂蜜", "amount": "2勺"}, {"item": "凉白开", "amount": "400ml"}],
+    "steps": ["苦瓜去瓤去白膜，切片焯水。", "柠檬去皮去籽。", "所有材料加水打汁。"],
+    "gear&time": "【果蔬】模式 或 手动8档 持续60秒",
+    "taste": "苦甘★★☆☆ | 清爽★★★★★ | 回甘★★★☆☆"
+  },
+  {
+    "id": 3008,
+    "category": "果蔬",
+    "name": "菠菜香蕉能量汁",
+    "description": "大力水手饮料，补充钾和铁，健身前后饮用。",
+    "ingredients": [{"item": "嫩菠菜", "amount": "1把"}, {"item": "香蕉", "amount": "1根"}, {"item": "酸奶", "amount": "100ml"}, {"item": "水", "amount": "100ml"}],
+    "steps": ["菠菜焯水去草酸。", "香蕉提供甜味。", "混合搅打。"],
+    "gear&time": "【果蔬】模式 或 手动6档 持续45秒",
+    "taste": "顺滑★★★★☆ | 甜度★★★☆☆ | 青草香★★☆☆"
+  },
+  {
+    "id": 3009,
+    "category": "果蔬",
+    "name": "哈密瓜黄瓜汁",
+    "description": "超级清爽，瓜果香气浓郁，利尿消肿。",
+    "ingredients": [{"item": "哈密瓜", "amount": "100g"}, {"item": "黄瓜", "amount": "半根"}, {"item": "凉白开", "amount": "200ml"}],
+    "steps": ["哈密瓜去皮去籽，黄瓜切段。", "入机打汁。"],
+    "gear&time": "【果蔬】模式 或 手动6档 持续40秒",
+    "taste": "甜★★★☆☆ | 清爽★★★★★ | 瓜香★★★★☆"
+  },
+  {
+    "id": 3010,
+    "category": "果蔬",
+    "name": "甜菜根苹果汁",
+    "description": "补血佳品，被称为“天然输血剂”，色泽红亮。",
+    "ingredients": [{"item": "甜菜根", "amount": "50g"}, {"item": "苹果", "amount": "1个"}, {"item": "胡萝卜", "amount": "30g"}, {"item": "水", "amount": "300ml"}],
+    "steps": ["甜菜根去皮切块。", "配合苹果胡萝卜平衡口味。", "搅打均匀。"],
+    "gear&time": "【果蔬】模式 或 手动9档 持续90秒",
+    "taste": "土腥味★☆☆ | 甜度★★★☆☆ | 营养★★★★★"
+  },
+  {
+    "id": 3011,
+    "category": "果蔬",
+    "name": "猕猴桃梨汁",
+    "description": "维C之王，美白淡斑，酸甜适口。",
+    "ingredients": [{"item": "猕猴桃", "amount": "2个"}, {"item": "雪梨", "amount": "1个"}, {"item": "水", "amount": "200ml"}, {"item": "蜂蜜", "amount": "适量"}],
+    "steps": ["猕猴桃去皮，雪梨去皮去核。", "打好后加蜂蜜。"],
+    "gear&time": "【果蔬】模式 或 手动5档 持续30秒 (防籽碎)",
+    "taste": "酸甜★★★★☆ | 刺舌感★☆☆ | 清新★★★★☆"
+  },
+  {
+    "id": 3012,
+    "category": "果蔬",
+    "name": "菠萝雪碧特饮",
+    "description": "仿气泡水口感，消食解腻，聚餐必备。",
+    "ingredients": [{"item": "菠萝", "amount": "150g"}, {"item": "雪碧", "amount": "300ml"}, {"item": "柠檬", "amount": "1片"}],
+    "steps": ["菠萝切块盐水浸泡。", "菠萝加少量雪碧打碎。", "倒入杯中补充满雪碧。"],
+    "gear&time": "手动3档 持续20秒 (保留果肉感)",
+    "taste": "酸甜★★★★★ | 气泡感★★★☆☆ | 爽口★★★★★"
+  },
+  {
+    "id": 3013,
+    "category": "果蔬",
+    "name": "葡萄羽衣甘蓝汁",
+    "description": "超级名模同款，抗氧化，排毒。",
+    "ingredients": [{"item": "羽衣甘蓝", "amount": "2片"}, {"item": "无籽红提", "amount": "10颗"}, {"item": "凉白开", "amount": "200ml"}],
+    "steps": ["羽衣甘蓝洗净去硬梗。", "葡萄提供甜味。", "充分搅打至细腻无渣。"],
+    "gear&time": "【果蔬】模式 或 手动9档 持续90秒",
+    "taste": "草本味★★☆☆ | 甜度★★★☆☆ | 绿色能量★★★★★"
+  },
+  {
+    "id": 3014,
+    "category": "果蔬",
+    "name": "芒果椰汁西米露",
+    "description": "港式甜品做法，香浓顺滑。",
+    "ingredients": [{"item": "大芒果", "amount": "1个"}, {"item": "椰汁", "amount": "200ml"}, {"item": "煮好的西米", "amount": "适量"}],
+    "steps": ["芒果一半切块备用，一半放入破壁机。", "加入椰汁打成芒果奶昔。", "杯底放西米和芒果丁，倒入奶昔。"],
+    "gear&time": "【果蔬】模式 或 手动5档 持续40秒",
+    "taste": "香浓★★★★★ | 甜度★★★★☆ | 甜品感★★★★★"
+  },
+  {
+    "id": 3015,
+    "category": "果蔬",
+    "name": "鲜榨玉米汁(生榨版)",
+    "description": "相比煮熟后打，生榨更清甜，需加热煮熟。",
+    "ingredients": [{"item": "水果玉米", "amount": "1根"}, {"item": "牛奶", "amount": "200ml"}, {"item": "大米", "amount": "10g"}, {"item": "水", "amount": "300ml"}],
+    "steps": ["生玉米剥粒，加大米。", "选择加热模式。", "完成后加入牛奶搅拌。"],
+    "gear&time": "【玉米汁】模式 (加热约20分钟)",
+    "taste": "鲜甜★★★★★ | 奶香★★★★☆ | 浓郁★★★★★"
+  },
+  {
+    "id": 3016,
+    "category": "果蔬",
+    "name": "牛油果雪梨汁",
+    "description": "口感像奶油慕斯，营养密度高。",
+    "ingredients": [{"item": "牛油果", "amount": "半个"}, {"item": "雪梨", "amount": "1个"}, {"item": "水", "amount": "200ml"}],
+    "steps": ["牛油果去皮去核。", "雪梨水分足，提供甜度。", "搅打细腻。"],
+    "gear&time": "【果蔬】模式 或 手动6档 持续45秒",
+    "taste": "绵密★★★★★ | 清甜★★★☆☆ | 饱腹★★★★☆"
+  },
+  {
+    "id": 3017,
+    "category": "果蔬",
+    "name": "圣女果养乐多",
+    "description": "酸酸甜甜，益生菌助消化。",
+    "ingredients": [{"item": "圣女果", "amount": "10颗"}, {"item": "养乐多", "amount": "2瓶"}, {"item": "凉白开", "amount": "50ml"}],
+    "steps": ["圣女果洗净。", "加入养乐多和少许水。", "点动打碎即可。"],
+    "gear&time": "手动3档 持续30秒 (保留口感)",
+    "taste": "酸甜★★★★☆ | 奶香★★★☆☆ | 开胃★★★★★"
+  },
+  {
+    "id": 3018,
+    "category": "果蔬",
+    "name": "木瓜牛奶",
+    "description": "经典搭配，美容丰胸，简单好喝。",
+    "ingredients": [{"item": "熟木瓜", "amount": "150g"}, {"item": "纯牛奶", "amount": "250ml"}],
+    "steps": ["木瓜去籽去皮。", "加入牛奶。", "打好后需尽快饮用。"],
+    "gear&time": "【果蔬】模式 或 手动5档 持续30秒",
+    "taste": "香浓★★★★☆ | 甜度★★★☆☆ | 顺滑★★★★☆"
+  },
+  {
+    "id": 3019,
+    "category": "果蔬",
+    "name": "柳橙柠檬汁",
+    "description": "VC炸弹，预防感冒，提神醒脑。",
+    "ingredients": [{"item": "柳橙", "amount": "2个"}, {"item": "柠檬", "amount": "2片"}, {"item": "凉白开", "amount": "200ml"}, {"item": "蜂蜜", "amount": "适量"}],
+    "steps": ["橙子去皮，尽量去白络。", "加入柠檬和水搅打。", "打好后加蜂蜜调味。"],
+    "gear&time": "【果蔬】模式 或 手动8档 持续60秒",
+    "taste": "酸爽★★★★★ | 果香★★★★☆ | 醒脑★★★★★"
+  },
+  {
+    "id": 3020,
+    "category": "果蔬",
+    "name": "芹菜黄瓜汁",
+    "description": "极低热量，控糖控脂，适合减重期。",
+    "ingredients": [{"item": "西芹", "amount": "1瓣"}, {"item": "黄瓜", "amount": "1根"}, {"item": "水", "amount": "300ml"}],
+    "steps": ["食材洗净切段。", "直接加水搅打。", "可过滤饮用口感更好。"],
+    "gear&time": "【果蔬】模式 或 手动8档 持续60秒",
+    "taste": "清淡★★★★☆ | 青草味★★★☆☆ | 0脂★★★★★"
+  },
+  {
+    "id": 3021,
+    "category": "果蔬",
+    "name": "草莓益力多",
+    "description": "粉粉嫩嫩，少女心爆棚，酸甜好喝。",
+    "ingredients": [{"item": "草莓", "amount": "8颗"}, {"item": "益力多/养乐多", "amount": "2瓶"}, {"item": "水", "amount": "少许"}],
+    "steps": ["草莓洗净去蒂。", "加入益力多。", "搅打均匀。"],
+    "gear&time": "【果蔬】模式 或 手动5档 持续40秒",
+    "taste": "酸甜★★★★☆ | 颜值★★★★★ | 香气★★★★☆"
+  },
+  {
+    "id": 4001,
+    "category": "冰沙",
+    "name": "西瓜冰沙",
+    "description": "夏天解暑神器，无需加糖，纯天然甜。",
+    "ingredients": [{"item": "西瓜肉", "amount": "300g"}, {"item": "冰块", "amount": "150g"}],
+    "steps": ["西瓜切块，最好冷冻一下。", "将西瓜和冰块放入破壁机。", "使用点动或冰沙模式。"],
+    "gear&time": "【冰沙】模式 或 手动点动(Pulse) 持续40秒",
+    "taste": "冰爽★★★★★ | 甜度★★★★☆ | 清新★★★★★"
+  },
+  {
+    "id": 4002,
+    "category": "冰沙",
+    "name": "绿豆沙冰",
+    "description": "还原童年绿豆冰棒的味道，清热解暑。",
+    "ingredients": [{"item": "煮熟的绿豆", "amount": "200g"}, {"item": "牛奶", "amount": "100ml"}, {"item": "冰块", "amount": "200g"}, {"item": "炼乳", "amount": "1勺"}],
+    "steps": ["绿豆提前煮软烂。", "所有材料入机。", "搅打至冰块细碎。"],
+    "gear&time": "【冰沙】模式 或 手动9档 持续50秒",
+    "taste": "豆香★★★★★ | 冰爽★★★★☆ | 怀旧★★★★★"
+  },
+  {
+    "id": 4003,
+    "category": "冰沙",
+    "name": "芒果酸奶绵绵冰",
+    "description": "口感绵密，热带风情浓郁。",
+    "ingredients": [{"item": "冷冻芒果肉", "amount": "200g"}, {"item": "浓稠酸奶", "amount": "150g"}, {"item": "冰块", "amount": "50g"}],
+    "steps": ["芒果切块冷冻一晚。", "加入酸奶和少量冰块。", "搅打成泥状。"],
+    "gear&time": "【冰沙】模式 或 手动8档 持续40秒",
+    "taste": "绵密★★★★★ | 酸甜★★★★☆ | 果香★★★★★"
+  },
+  {
+    "id": 4004,
+    "category": "冰沙",
+    "name": "奥利奥奶昔",
+    "description": "麦当劳同款，巧克力控必选。",
+    "ingredients": [{"item": "奥利奥饼干", "amount": "5块"}, {"item": "香草冰淇淋", "amount": "1球"}, {"item": "牛奶", "amount": "100ml"}, {"item": "冰块", "amount": "100g"}],
+    "steps": ["所有材料放入破壁机。", "搅打均匀。", "最后撒上奥利奥碎装饰。"],
+    "gear&time": "手动5档 持续30秒 (保留饼干碎口感)",
+    "taste": "甜腻★★★★☆ | 香浓★★★★★ | 快乐★★★★★"
+  },
+  {
+    "id": 4005,
+    "category": "冰沙",
+    "name": "牛油果奶昔",
+    "description": "细腻如奶油，营养丰富，饱腹感强。",
+    "ingredients": [{"item": "牛油果", "amount": "1个"}, {"item": "牛奶", "amount": "250ml"}, {"item": "冰块", "amount": "适量"}, {"item": "蜂蜜", "amount": "少许"}],
+    "steps": ["牛油果去皮核。", "加奶加冰打匀。"],
+    "gear&time": "【奶昔】模式 或 手动6档 持续40秒",
+    "taste": "顺滑★★★★★ | 清淡★★★☆☆ | 奶香★★★★☆"
+  },
+  {
+    "id": 4006,
+    "category": "冰沙",
+    "name": "草莓芝士奶盖冰",
+    "description": "复刻奶茶店爆款，高颜值。",
+    "ingredients": [{"item": "冷冻草莓", "amount": "150g"}, {"item": "茉莉花茶汤", "amount": "100ml"}, {"item": "冰块", "amount": "100g"}, {"item": "糖浆", "amount": "20ml"}],
+    "steps": ["提前泡好花茶放凉。", "所有材料打成冰沙。", "倒出后可淋上奶油或奶盖。"],
+    "gear&time": "【冰沙】模式 或 手动9档 持续45秒",
+    "taste": "酸甜★★★★☆ | 茶香★★☆☆ | 清爽★★★★☆"
+  },
+  {
+    "id": 4007,
+    "category": "冰沙",
+    "name": "抹茶星冰乐",
+    "description": "微苦回甘，茶香浓郁，夏日清凉。",
+    "ingredients": [{"item": "抹茶粉", "amount": "10g"}, {"item": "牛奶", "amount": "150ml"}, {"item": "冰块", "amount": "200g"}, {"item": "炼乳", "amount": "20g"}],
+    "steps": ["抹茶粉先用少量温水化开。", "加入牛奶、冰块、炼乳搅打。", "打至冰块细腻。"],
+    "gear&time": "【冰沙】模式 或 手动9档 持续50秒",
+    "taste": "茶香★★★★★ | 甜度★★★☆☆ | 冰爽★★★★☆"
+  },
+  {
+    "id": 4008,
+    "category": "冰沙",
+    "name": "桃子乌龙冰沙",
+    "description": "桃香浓郁，茶底清爽，解腻首选。",
+    "ingredients": [{"item": "水蜜桃", "amount": "1个"}, {"item": "乌龙茶汤", "amount": "100ml"}, {"item": "冰块", "amount": "150g"}, {"item": "蜂蜜", "amount": "适量"}],
+    "steps": ["桃子去皮切块。", "加入冷茶汤和冰块搅打。", "保留一点桃肉口感更好。"],
+    "gear&time": "手动6档 持续30秒 (保留果肉)",
+    "taste": "清爽★★★★★ | 茶香★★★☆☆ | 果香★★★★☆"
+  },
+  {
+    "id": 4009,
+    "category": "冰沙",
+    "name": "海盐柠檬冰",
+    "description": "电解质补充，咸酸爽口，运动后解渴。",
+    "ingredients": [{"item": "柠檬", "amount": "1个"}, {"item": "海盐", "amount": "2g"}, {"item": "冰块", "amount": "200g"}, {"item": "雪碧/水", "amount": "100ml"}],
+    "steps": ["柠檬去皮去籽取肉。", "加入海盐和液体、冰块。", "快速搅打。"],
+    "gear&time": "【冰沙】模式 或 手动10档 持续40秒",
+    "taste": "咸酸★★★★☆ | 刺激★★★★☆ | 解渴★★★★★"
+  },
+  {
+    "id": 4010,
+    "category": "冰沙",
+    "name": "多肉葡萄冰",
+    "description": "紫色梦幻，葡萄味浓，好喝不腻。",
+    "ingredients": [{"item": "巨峰葡萄(冻)", "amount": "150g"}, {"item": "绿茶汤", "amount": "100ml"}, {"item": "冰块", "amount": "100g"}, {"item": "糖", "amount": "适量"}],
+    "steps": ["葡萄洗净冷冻。", "加入茶汤和冰块搅打。", "过滤掉皮渣口感更佳。"],
+    "gear&time": "【冰沙】模式 或 手动9档 持续50秒",
+    "taste": "酸甜★★★★☆ | 果香★★★★★ | 颜值★★★★☆"
+  },
+  {
+    "id": 4011,
+    "category": "冰沙",
+    "name": "香蕉可可奶昔",
+    "description": "低脂版巧克力奶昔，健身党最爱。",
+    "ingredients": [{"item": "香蕉", "amount": "1根"}, {"item": "无糖可可粉", "amount": "10g"}, {"item": "牛奶", "amount": "200ml"}, {"item": "冰块", "amount": "少许"}],
+    "steps": ["香蕉提供甜味和稠度。", "混合搅打。", "无需加糖。"],
+    "gear&time": "【奶昔】模式 或 手动6档 持续30秒",
+    "taste": "香浓★★★☆☆ | 苦甜★★☆☆ | 顺滑★★★★☆"
+  },
+  {
+    "id": 4012,
+    "category": "冰沙",
+    "name": "蓝莓酸奶昔",
+    "description": "护眼抗氧化，酸甜紫色，口感丰富。",
+    "ingredients": [{"item": "蓝莓", "amount": "1盒"}, {"item": "酸奶", "amount": "200g"}, {"item": "冰块", "amount": "50g"}],
+    "steps": ["洗净蓝莓。", "加酸奶和冰块打匀。", "保留部分果粒更有口感。"],
+    "gear&time": "【奶昔】模式 或 手动6档 持续40秒",
+    "taste": "酸甜★★★★☆ | 浓稠★★★☆☆ | 营养★★★★★"
+  },
+  {
+    "id": 4013,
+    "category": "冰沙",
+    "name": "菠萝椰子冰沙",
+    "description": "皮娜柯拉达风味，满满的热带度假感。",
+    "ingredients": [{"item": "菠萝", "amount": "150g"}, {"item": "椰浆", "amount": "50ml"}, {"item": "冰块", "amount": "150g"}, {"item": "水", "amount": "50ml"}],
+    "steps": ["菠萝切块盐水泡过。", "混合椰浆冰块搅打。"],
+    "gear&time": "【冰沙】模式 或 手动9档 持续45秒",
+    "taste": "酸甜★★★★☆ | 椰香★★★★☆ | 清爽★★★★★"
+  },
+  {
+    "id": 4014,
+    "category": "冰沙",
+    "name": "荔枝玫瑰冰饮",
+    "description": "香气高级，清甜滋润，夏日限定。",
+    "ingredients": [{"item": "荔枝肉", "amount": "10颗"}, {"item": "干玫瑰花", "amount": "5朵"}, {"item": "冰块", "amount": "150g"}, {"item": "苏打水", "amount": "100ml"}],
+    "steps": ["玫瑰花提前泡水取茶汤。", "荔枝肉和冰块、茶汤搅打。", "倒入杯中加苏打水。"],
+    "gear&time": "【冰沙】模式 或 手动8档 持续30秒",
+    "taste": "清甜★★★★☆ | 花香★★★★★ | 颜值★★★★★"
+  },
+  {
+    "id": 4015,
+    "category": "冰沙",
+    "name": "红豆冰沙",
+    "description": "经典中式糖水冰沙化，豆香浓郁。",
+    "ingredients": [{"item": "蜜红豆", "amount": "100g"}, {"item": "牛奶", "amount": "50ml"}, {"item": "冰块", "amount": "200g"}],
+    "steps": ["使用市售或自制蜜红豆。", "加入大量冰块和少许奶。", "打成沙冰。"],
+    "gear&time": "【冰沙】模式 或 手动10档 持续50秒",
+    "taste": "甜★★★★☆ | 豆香★★★★☆ | 冰爽★★★★★"
+  },
+  {
+    "id": 4016,
+    "category": "冰沙",
+    "name": "花生酱香蕉奶昔",
+    "description": "热量炸弹但极其好喝，口感丰富浓郁。",
+    "ingredients": [{"item": "花生酱", "amount": "1勺"}, {"item": "香蕉", "amount": "1根"}, {"item": "牛奶", "amount": "200ml"}, {"item": "冰块", "amount": "适量"}],
+    "steps": ["所有材料混合。", "充分搅打至顺滑。"],
+    "gear&time": "【奶昔】模式 或 手动7档 持续40秒",
+    "taste": "香浓★★★★★ | 甜腻★★★★☆ | 顺滑★★★★★"
+  },
+  {
+    "id": 4017,
+    "category": "冰沙",
+    "name": "冰镇杨梅汁",
+    "description": "酸爽开胃，解暑生津，颜色红艳。",
+    "ingredients": [{"item": "杨梅肉", "amount": "150g"}, {"item": "冰糖", "amount": "20g"}, {"item": "冰块", "amount": "150g"}, {"item": "水", "amount": "100ml"}],
+    "steps": ["杨梅去核（关键步骤）。", "加糖加冰搅打。"],
+    "gear&time": "【冰沙】模式 或 手动8档 持续40秒",
+    "taste": "酸爽★★★★★ | 果香★★★★☆ | 鲜美★★★★☆"
+  },
+  {
+    "id": 4018,
+    "category": "冰沙",
+    "name": "咖啡冰沙",
+    "description": "提神醒脑，比便利店的好喝。",
+    "ingredients": [{"item": "浓缩咖啡液", "amount": "50ml"}, {"item": "牛奶", "amount": "100ml"}, {"item": "冰块", "amount": "200g"}, {"item": "糖浆", "amount": "适量"}],
+    "steps": ["咖啡液放凉。", "混合冰块牛奶搅打。", "打成细沙状。"],
+    "gear&time": "【冰沙】模式 或 手动9档 持续45秒",
+    "taste": "苦甜★★★☆☆ | 咖啡香★★★★☆ | 冰爽★★★★★"
+  },
+  {
+    "id": 4019,
+    "category": "冰沙",
+    "name": "榴莲奶昔",
+    "description": "重口味爱好者福音，香气霸道。",
+    "ingredients": [{"item": "榴莲肉", "amount": "1块"}, {"item": "牛奶", "amount": "200ml"}, {"item": "冰块", "amount": "少许"}],
+    "steps": ["榴莲去核。", "加奶搅打。", "无需加糖。"],
+    "gear&time": "【奶昔】模式 或 手动6档 持续30秒",
+    "taste": "浓郁★★★★★ | 甜度★★★★★ | 顺滑★★★★★"
+  },
+  {
+    "id": 4020,
+    "category": "冰沙",
+    "name": "薄荷柠檬冰",
+    "description": "透心凉，清新口气，极度清爽。",
+    "ingredients": [{"item": "新鲜薄荷叶", "amount": "10片"}, {"item": "柠檬汁", "amount": "半个量"}, {"item": "冰块", "amount": "200g"}, {"item": "雪碧/糖水", "amount": "100ml"}],
+    "steps": ["薄荷叶洗净。", "所有材料混合打碎。", "颜色翠绿好看。"],
+    "gear&time": "【冰沙】模式 或 手动10档 持续30秒",
+    "taste": "清凉★★★★★ | 酸甜★★★☆☆ | 清新★★★★★"
+  },
+  {
+    "id": 4021,
+    "category": "冰沙",
+    "name": "哈密瓜奶昔",
+    "description": "香甜浓郁，口感如丝绸。",
+    "ingredients": [{"item": "哈密瓜", "amount": "150g"}, {"item": "牛奶", "amount": "150ml"}, {"item": "冰块", "amount": "50g"}],
+    "steps": ["哈密瓜一定要选甜的。", "加奶打匀即可。"],
+    "gear&time": "【奶昔】模式 或 手动6档 持续40秒",
+    "taste": "甜★★★★☆ | 奶香★★★☆☆ | 果香★★★★☆"
+  },
+  {
+    "id": 5001,
+    "category": "熬粥",
+    "name": "南瓜小米粥",
+    "description": "养胃金牌搭档，破壁机做出来更细腻或保留米粒感（视模式定）。",
+    "ingredients": [
+      {"item": "小米", "amount": "50g"},
+      {"item": "南瓜", "amount": "100g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "南瓜切丁，小米洗净。",
+      "放入破壁机。",
+      "选择【绵粥】或【粗粮粥】模式（不完全打碎），若选【米糊】则是糊。"
+    ],
+    "gear&time": "【绵粥/熬粥】模式 约30分钟",
+    "taste": "软糯★★★★☆ | 甜香★★★☆☆ | 养胃★★★★★"
+  },
+  {
+    "id": 5002,
+    "category": "熬粥",
+    "name": "皮蛋瘦肉粥",
+    "description": "经典广式咸粥，鲜美可口。",
+    "ingredients": [
+      {"item": "大米", "amount": "60g"},
+      {"item": "皮蛋", "amount": "1个"},
+      {"item": "瘦肉丁", "amount": "50g"},
+      {"item": "姜丝", "amount": "少许"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "瘦肉切丁焯水，皮蛋切块。",
+      "大米洗净。",
+      "所有材料入机（保留颗粒感模式）。",
+      "出锅加盐、葱花。"
+    ],
+    "gear&time": "【绵粥】模式 约40分钟",
+    "taste": "咸鲜★★★★★ | 顺滑★★★★☆ | 饱腹★★★★☆"
+  },
+  {
+    "id": 5003,
+    "category": "熬粥",
+    "name": "紫薯杂粮粥",
+    "description": "富含膳食纤维，低脂健康。",
+    "ingredients": [
+      {"item": "紫薯", "amount": "80g"},
+      {"item": "大米", "amount": "30g"},
+      {"item": "燕麦", "amount": "20g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "紫薯切块。",
+      "杂粮洗净。",
+      "入机烹煮。"
+    ],
+    "gear&time": "【杂粮粥】模式 约40分钟",
+    "taste": "清甜★★☆☆ | 软糯★★★★☆ | 颜值★★★★☆"
+  },
+  {
+    "id": 5004,
+    "category": "熬粥",
+    "name": "青菜香菇肉末粥",
+    "description": "营养均衡，适合宝宝和老人。",
+    "ingredients": [
+      {"item": "大米", "amount": "50g"},
+      {"item": "青菜", "amount": "2颗"},
+      {"item": "香菇", "amount": "2朵"},
+      {"item": "肉沫", "amount": "30g"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "香菇肉沫焯水。",
+      "先煮粥，程序结束前5分钟放入切碎的青菜（防止变黄）。",
+      "加盐调味。"
+    ],
+    "gear&time": "【绵粥】模式 约40分钟",
+    "taste": "鲜美★★★☆☆ | 清爽★★★★☆ | 营养★★★★★"
+  },
+  {
+    "id": 5005,
+    "category": "熬粥",
+    "name": "红豆黑米粥",
+    "description": "补血益气，口感软糯香甜。",
+    "ingredients": [
+      {"item": "黑米", "amount": "30g"},
+      {"item": "红豆", "amount": "30g"},
+      {"item": "花生", "amount": "20g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "黑米红豆较硬，建议提前浸泡2小时。",
+      "放入破壁机煮至软烂。",
+      "加红糖调味。"
+    ],
+    "gear&time": "【杂粮粥】模式 约50分钟",
+    "taste": "甜糯★★★★☆ | 豆香★★★☆☆ | 饱腹★★★★★"
+  },
+  {
+    "id": 5006,
+    "category": "熬粥",
+    "name": "山药排骨粥(去骨版)",
+    "description": "破壁机版通常用肉糜或去骨肉，健脾养胃。",
+    "ingredients": [
+      {"item": "大米", "amount": "50g"},
+      {"item": "铁棍山药", "amount": "80g"},
+      {"item": "猪瘦肉/去骨排骨肉", "amount": "50g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "山药切块，肉焯水。",
+      "全部入机烹煮。",
+      "出锅加盐。"
+    ],
+    "gear&time": "【绵粥】模式 约40分钟",
+    "taste": "清淡★★★★★ | 鲜美★★★☆☆ | 滋补★★★★☆"
+  },
+  {
+    "id": 5007,
+    "category": "熬粥",
+    "name": "八宝粥",
+    "description": "传统风味，食材丰富，一键搞定。",
+    "ingredients": [
+      {"item": "混合八宝米", "amount": "80g"},
+      {"item": "清水", "amount": "800ml"},
+      {"item": "冰糖", "amount": "适量"}
+    ],
+    "steps": [
+      "八宝米洗净浸泡。",
+      "破壁机煮粥模式。",
+      "如果喜欢烂一点可延长细度。"
+    ],
+    "gear&time": "【杂粮粥】模式 约50分钟",
+    "taste": "丰富★★★★★ | 甜糯★★★★☆ | 传统★★★★★"
+  },
+  {
+    "id": 5008,
+    "category": "熬粥",
+    "name": "鸡肉胡萝卜粥",
+    "description": "增强免疫力，易消化。",
+    "ingredients": [
+      {"item": "鸡胸肉", "amount": "50g"},
+      {"item": "胡萝卜", "amount": "50g"},
+      {"item": "大米", "amount": "50g"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "鸡肉切丁焯水，胡萝卜切丁。",
+      "与大米一同烹煮。",
+      "加少许盐和白胡椒粉去腥。"
+    ],
+    "gear&time": "【绵粥】模式 约40分钟",
+    "taste": "鲜香★★★☆☆ | 清淡★★★★☆ | 顺滑★★★☆☆"
+  },
+  {
+    "id": 5009,
+    "category": "熬粥",
+    "name": "绿豆百合粥",
+    "description": "夏季清热解暑，颗粒分明或半沙状。",
+    "ingredients": [
+      {"item": "绿豆", "amount": "50g"},
+      {"item": "大米", "amount": "30g"},
+      {"item": "百合", "amount": "10g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "绿豆洗净。",
+      "加入大米增加粘稠度。",
+      "煮至绿豆开花。"
+    ],
+    "gear&time": "【杂粮粥】模式 约40分钟",
+    "taste": "清爽★★★★★ | 甜度★☆☆ | 沙糯★★★☆☆"
+  },
+  {
+    "id": 5010,
+    "category": "熬粥",
+    "name": "红薯玉米渣粥",
+    "description": "黄金搭档，粗纤维，清肠胃。",
+    "ingredients": [
+      {"item": "红薯", "amount": "80g"},
+      {"item": "玉米渣", "amount": "40g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "红薯切块。",
+      "玉米渣洗净。",
+      "一同入机。"
+    ],
+    "gear&time": "【杂粮粥】模式 约30分钟",
+    "taste": "甜香★★★☆☆ | 颗粒感★★★☆☆ | 饱腹★★★★☆"
+  },
+  {
+    "id": 5011,
+    "category": "熬粥",
+    "name": "三色藜麦粥",
+    "description": "超级食物，低卡高蛋白，口感Q弹。",
+    "ingredients": [
+      {"item": "三色藜麦", "amount": "40g"},
+      {"item": "小米", "amount": "20g"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "藜麦洗净。",
+      "小米增加稠度。",
+      "煮至藜麦出小尾巴。"
+    ],
+    "gear&time": "【绵粥】模式 约30分钟",
+    "taste": "Q弹★★★★☆ | 清淡★★★☆☆ | 营养★★★★★"
+  },
+  {
+    "id": 5012,
+    "category": "熬粥",
+    "name": "红枣桂圆黑米粥",
+    "description": "女性气血双补粥，温润滋补。",
+    "ingredients": [
+      {"item": "黑米", "amount": "40g"},
+      {"item": "糯米", "amount": "20g"},
+      {"item": "红枣", "amount": "4颗"},
+      {"item": "桂圆", "amount": "10g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "红枣去核，桂圆去壳。",
+      "黑米糯米洗净。",
+      "煮至软烂黏稠。"
+    ],
+    "gear&time": "【杂粮粥】模式 约50分钟",
+    "taste": "甜糯★★★★★ | 香气★★★★☆ | 滋补★★★★★"
+  },
+  {
+    "id": 5013,
+    "category": "熬粥",
+    "name": "海鲜鲜虾粥",
+    "description": "鲜掉眉毛，早餐豪华配置。",
+    "ingredients": [
+      {"item": "大米", "amount": "60g"},
+      {"item": "鲜虾仁", "amount": "50g"},
+      {"item": "干贝/瑶柱", "amount": "10g"},
+      {"item": "姜丝", "amount": "适量"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "干贝提前泡软撕碎。",
+      "虾仁去虾线。",
+      "大米干贝先煮，最后5分钟放虾仁和姜丝。"
+    ],
+    "gear&time": "【绵粥】模式 约40分钟",
+    "taste": "鲜美★★★★★ | 咸鲜★★★★☆ | 豪华★★★★☆"
+  },
+  {
+    "id": 5014,
+    "category": "熬粥",
+    "name": "牛奶燕麦粥",
+    "description": "西式早餐，奶香浓郁，简单快手。",
+    "ingredients": [
+      {"item": "生燕麦片", "amount": "50g"},
+      {"item": "牛奶", "amount": "200ml"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "燕麦加水煮粥。",
+      "程序结束后倒入牛奶搅拌。",
+      "可加果干点缀。"
+    ],
+    "gear&time": "【绵粥】模式 约20分钟",
+    "taste": "奶香★★★★★ | 顺滑★★★★☆ | 饱腹★★★☆☆"
+  },
+  {
+    "id": 5015,
+    "category": "熬粥",
+    "name": "核桃黑芝麻粥",
+    "description": "乌发补脑，香气扑鼻。",
+    "ingredients": [
+      {"item": "大米", "amount": "40g"},
+      {"item": "黑芝麻", "amount": "20g"},
+      {"item": "核桃仁", "amount": "3个"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "核桃掰碎。",
+      "所有材料入机烹煮。",
+      "喜欢细腻可选米糊模式，喜欢粥选绵粥。"
+    ],
+    "gear&time": "【绵粥】模式 约30分钟",
+    "taste": "香气★★★★★ | 颗粒感★★★☆☆ | 养生★★★★☆"
+  },
+  {
+    "id": 5016,
+    "category": "熬粥",
+    "name": "百合莲子银耳粥",
+    "description": "滋阴润肺，胶质满满。",
+    "ingredients": [
+      {"item": "银耳", "amount": "1/4朵"},
+      {"item": "莲子", "amount": "10g"},
+      {"item": "大米", "amount": "30g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "银耳泡发撕碎。",
+      "加入大米增加粥的口感。",
+      "煮至汤汁粘稠。"
+    ],
+    "gear&time": "【绵粥】模式 约40分钟",
+    "taste": "顺滑★★★★☆ | 清甜★★☆☆ | 润燥★★★★★"
+  },
+  {
+    "id": 5017,
+    "category": "熬粥",
+    "name": "红薯栗子粥",
+    "description": "秋季限定，香甜粉糯。",
+    "ingredients": [
+      {"item": "红薯", "amount": "80g"},
+      {"item": "板栗仁", "amount": "5个"},
+      {"item": "小米", "amount": "30g"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "红薯板栗切小块。",
+      "小米洗净。",
+      "入机煮烂。"
+    ],
+    "gear&time": "【杂粮粥】模式 约35分钟",
+    "taste": "甜糯★★★★★ | 饱腹★★★★☆ | 暖胃★★★★★"
+  },
+  {
+    "id": 5018,
+    "category": "熬粥",
+    "name": "菠菜猪肝粥",
+    "description": "补铁神菜，适合贫血人群和儿童。",
+    "ingredients": [
+      {"item": "大米", "amount": "50g"},
+      {"item": "猪肝", "amount": "50g"},
+      {"item": "菠菜", "amount": "2颗"},
+      {"item": "姜片", "amount": "2片"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "猪肝切片反复冲洗去血水，加姜片焯水。",
+      "大米煮粥。",
+      "最后放入猪肝和切碎的菠菜煮熟。"
+    ],
+    "gear&time": "【绵粥】模式 约40分钟",
+    "taste": "咸鲜★★★☆☆ | 营养★★★★★ | 补血★★★★★"
+  },
+  {
+    "id": 5019,
+    "category": "熬粥",
+    "name": "糙米燕麦减脂粥",
+    "description": "全谷物，控糖饱腹，口感有嚼劲。",
+    "ingredients": [
+      {"item": "糙米", "amount": "30g"},
+      {"item": "燕麦米", "amount": "30g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "糙米燕麦米提前浸泡3小时以上。",
+      "入机长时间烹煮。",
+      "口感偏硬，越嚼越香。"
+    ],
+    "gear&time": "【杂粮粥】模式 约60分钟",
+    "taste": "嚼劲★★★★☆ | 米香★★★☆☆ | 减脂★★★★★"
+  },
+  {
+    "id": 5020,
+    "category": "熬粥",
+    "name": "薏米冬瓜鸭肉粥",
+    "description": "利湿消肿，适合湿热天气。",
+    "ingredients": [
+      {"item": "大米", "amount": "40g"},
+      {"item": "薏米", "amount": "20g"},
+      {"item": "冬瓜", "amount": "50g"},
+      {"item": "鸭肉丁", "amount": "30g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "薏米炒黄去寒。",
+      "鸭肉焯水去腥。",
+      "冬瓜切丁。",
+      "煮至粥稠肉烂。"
+    ],
+    "gear&time": "【绵粥】模式 约45分钟",
+    "taste": "清淡★★★★☆ | 鲜美★★★☆☆ | 祛湿★★★★★"
+  },
+  {
+    "id": 5021,
+    "category": "熬粥",
+    "name": "芋头排骨咸粥",
+    "description": "芋头软烂入味，咸香适口。",
+    "ingredients": [
+      {"item": "大米", "amount": "50g"},
+      {"item": "芋头", "amount": "60g"},
+      {"item": "排骨/肉丁", "amount": "50g"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "芋头切丁。",
+      "肉丁焯水。",
+      "加少许盐和白胡椒粉烹煮。"
+    ],
+    "gear&time": "【绵粥】模式 约40分钟",
+    "taste": "咸香★★★★☆ | 粉糯★★★★☆ | 饱腹★★★★☆"
+  },
+  {
+    "id": 6001,
+    "category": "花果茶",
+    "name": "苹果山楂刮油茶",
+    "description": "酸酸甜甜，消食化积，大餐救星。",
+    "ingredients": [
+      {"item": "苹果", "amount": "1个"},
+      {"item": "干山楂", "amount": "10g"},
+      {"item": "红枣", "amount": "3颗"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "苹果去皮切块（保留皮更香但有蜡需洗净）。",
+      "山楂红枣洗净。",
+      "选择煮茶或绵粥模式煮开即可，无需打太碎。"
+    ],
+    "gear&time": "【花茶/煮炖】模式 20分钟",
+    "taste": "酸甜★★★★★ | 解腻★★★★★ | 果香★★★☆☆"
+  },
+  {
+    "id": 6002,
+    "category": "花果茶",
+    "name": "罗汉果雪梨茶",
+    "description": "润肺止咳神方，适合嗓子不舒服时饮用。",
+    "ingredients": [
+      {"item": "罗汉果", "amount": "半个"},
+      {"item": "雪梨", "amount": "1个"},
+      {"item": "清水", "amount": "1000ml"}
+    ],
+    "steps": [
+      "罗汉果捏碎，雪梨切块。",
+      "放入破壁机烹煮。",
+      "罗汉果很甜，切记不要加糖。"
+    ],
+    "gear&time": "【花茶/煮炖】模式 20分钟",
+    "taste": "甘甜★★★★★ | 润喉★★★★★ | 清热★★★★☆"
+  },
+  {
+    "id": 6003,
+    "category": "花果茶",
+    "name": "金桔柠檬茶",
+    "description": "补充维C，预防感冒，开胃生津。",
+    "ingredients": [
+      {"item": "小金桔", "amount": "6颗"},
+      {"item": "柠檬", "amount": "2片"},
+      {"item": "冰糖", "amount": "30g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "金桔对半切开，去籽。",
+      "放入破壁机加水煮。",
+      "待水温降至60度以下放入柠檬片（防苦）。"
+    ],
+    "gear&time": "【花茶】模式 15分钟",
+    "taste": "酸爽★★★★☆ | 清新★★★★★ | 果香★★★★☆"
+  },
+  {
+    "id": 6004,
+    "category": "花果茶",
+    "name": "洛神花玫瑰茶",
+    "description": "植物界的红宝石，美容养颜，调节内分泌。",
+    "ingredients": [
+      {"item": "洛神花", "amount": "3朵"},
+      {"item": "干玫瑰", "amount": "5朵"},
+      {"item": "陈皮", "amount": "1瓣"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "洛神花洗净。",
+      "所有材料煮水。",
+      "煮出的茶汤呈红宝石色，加冰糖饮用。"
+    ],
+    "gear&time": "【花茶】模式 10分钟",
+    "taste": "酸★★★★☆ | 花香★★★★★ | 颜值★★★★★"
+  },
+  {
+    "id": 6005,
+    "category": "花果茶",
+    "name": "红枣姜茶",
+    "description": "暖宫驱寒，手脚冰凉者必备。",
+    "ingredients": [
+      {"item": "老姜", "amount": "15g"},
+      {"item": "红枣", "amount": "5颗"},
+      {"item": "红糖", "amount": "20g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "姜切片或拍碎。",
+      "红枣去核。",
+      "入机烹煮，无需打碎，喝汤即可。"
+    ],
+    "gear&time": "【花茶/煮炖】模式 15分钟",
+    "taste": "辛辣★★★☆☆ | 甜度★★★☆☆ | 暖身★★★★★"
+  },
+  {
+    "id": 6006,
+    "category": "花果茶",
+    "name": "菠萝水果茶",
+    "description": "热带风情，煮过的水果茶更温润，不伤胃。",
+    "ingredients": [
+      {"item": "菠萝", "amount": "100g"},
+      {"item": "苹果", "amount": "半个"},
+      {"item": "橙子", "amount": "半个"},
+      {"item": "百香果", "amount": "1个"},
+      {"item": "清水", "amount": "1000ml"}
+    ],
+    "steps": [
+      "水果切块。",
+      "百香果最后放。",
+      "煮至满屋果香。"
+    ],
+    "gear&time": "【花茶】模式 15分钟",
+    "taste": "酸甜★★★★★ | 丰富★★★★☆ | 果香★★★★★"
+  },
+  {
+    "id": 6007,
+    "category": "花果茶",
+    "name": "无花果麦冬茶",
+    "description": "滋阴润燥，缓解干咳，适合秋天。",
+    "ingredients": [
+      {"item": "干无花果", "amount": "4颗"},
+      {"item": "麦冬", "amount": "5g"},
+      {"item": "雪梨", "amount": "半个"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "无花果对半剪开。",
+      "雪梨切块。",
+      "一同烹煮。"
+    ],
+    "gear&time": "【花茶】模式 20分钟",
+    "taste": "清甜★★★★☆ | 润喉★★★★★ | 药膳感★☆☆"
+  },
+  {
+    "id": 6008,
+    "category": "花果茶",
+    "name": "茅根竹蔗水",
+    "description": "广东经典凉茶，清热下火，小孩也爱喝。",
+    "ingredients": [
+      {"item": "竹蔗", "amount": "2节"},
+      {"item": "茅根", "amount": "1小把"},
+      {"item": "胡萝卜", "amount": "半根"},
+      {"item": "马蹄", "amount": "3个"},
+      {"item": "清水", "amount": "1000ml"}
+    ],
+    "steps": [
+      "竹蔗劈开，胡萝卜切块。",
+      "所有材料放入破壁机煮水（不打碎）。",
+      "只喝汤水。"
+    ],
+    "gear&time": "【煮炖】模式 30分钟",
+    "taste": "清甜★★★★★ | 去火★★★★★ | 清爽★★★★☆"
+  },
+  {
+    "id": 6009,
+    "category": "花果茶",
+    "name": "菊花决明子茶",
+    "description": "清肝明目，适合熬夜看手机人群。",
+    "ingredients": [
+      {"item": "菊花", "amount": "5朵"},
+      {"item": "决明子", "amount": "5g"},
+      {"item": "枸杞", "amount": "10g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "决明子冲洗一下。",
+      "菊花和枸杞易烂，建议后放或煮好后焖泡。",
+      "决明子可煮久一点。"
+    ],
+    "gear&time": "【花茶】模式 10分钟",
+    "taste": "微苦★☆☆ | 回甘★★★☆☆ | 清新★★★★☆"
+  },
+  {
+    "id": 6010,
+    "category": "花果茶",
+    "name": "蜜桃乌龙热茶",
+    "description": "便利店爆款热饮版，香气迷人。",
+    "ingredients": [
+      {"item": "水蜜桃", "amount": "1个"},
+      {"item": "乌龙茶包", "amount": "1包"},
+      {"item": "冰糖", "amount": "适量"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "桃子皮剥下先煮水（出粉色）。",
+      "捞出桃皮，放入桃肉和茶包煮2分钟。",
+      "取出茶包（防苦涩）即可饮用。"
+    ],
+    "gear&time": "【花茶】模式 10分钟",
+    "taste": "甜美★★★★☆ | 茶香★★★☆☆ | 颜值★★★★★"
+  },
+  {
+    "id": 6011,
+    "category": "花果茶",
+    "name": "陈皮普洱茶",
+    "description": "消食健脾，理气化痰，适合饭后。",
+    "ingredients": [
+      {"item": "陈皮", "amount": "1瓣"},
+      {"item": "熟普洱", "amount": "5g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "陈皮泡软刮去白瓤（去苦）。",
+      "普洱茶洗茶一次。",
+      "入机煮沸。"
+    ],
+    "gear&time": "【花茶】模式 8分钟",
+    "taste": "醇厚★★★★★ | 回甘★★★★☆ | 陈香★★★★★"
+  },
+  {
+    "id": 6012,
+    "category": "花果茶",
+    "name": "桂圆红枣枸杞茶",
+    "description": "三宝茶，补气血，脸色红润。",
+    "ingredients": [
+      {"item": "桂圆干", "amount": "10颗"},
+      {"item": "红枣", "amount": "5颗"},
+      {"item": "枸杞", "amount": "1小把"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "食材洗净。",
+      "放入破壁机煮。",
+      "食材本身很甜，无需加糖。"
+    ],
+    "gear&time": "【花茶】模式 15分钟",
+    "taste": "甜★★★★☆ | 滋补★★★★☆ | 温暖★★★★★"
+  },
+  {
+    "id": 6013,
+    "category": "花果茶",
+    "name": "草莓苹果热红酒(无醇版)",
+    "description": "冬日氛围感拉满，无酒精更健康。",
+    "ingredients": [
+      {"item": "葡萄汁", "amount": "300ml"},
+      {"item": "苹果", "amount": "半个"},
+      {"item": "草莓", "amount": "4颗"},
+      {"item": "橙子", "amount": "2片"},
+      {"item": "肉桂", "amount": "1小段"},
+      {"item": "清水", "amount": "200ml"}
+    ],
+    "steps": [
+      "所有水果切块。",
+      "加入葡萄汁和水烹煮。",
+      "肉桂是灵魂，不可少。"
+    ],
+    "gear&time": "【花茶】模式 15分钟",
+    "taste": "香料味★★★☆☆ | 酸甜★★★★☆ | 氛围★★★★★"
+  },
+  {
+    "id": 6014,
+    "category": "花果茶",
+    "name": "桑葚玫瑰茶",
+    "description": "滋阴补血，乌发，抗氧化。",
+    "ingredients": [
+      {"item": "干桑葚/鲜桑葚", "amount": "20g"},
+      {"item": "干玫瑰", "amount": "5朵"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "桑葚容易染色，注意小心。",
+      "入机烹煮。",
+      "煮好后茶汤呈深紫色。"
+    ],
+    "gear&time": "【花茶】模式 10分钟",
+    "taste": "微酸★★★☆☆ | 花香★★★☆☆ | 滋润★★★★☆"
+  },
+  {
+    "id": 6015,
+    "category": "花果茶",
+    "name": "黑豆大麦茶",
+    "description": "消肿去湿，浓郁麦香，像喝咖啡一样。",
+    "ingredients": [
+      {"item": "烘焙黑豆", "amount": "20g"},
+      {"item": "大麦茶粒", "amount": "20g"},
+      {"item": "清水", "amount": "1000ml"}
+    ],
+    "steps": [
+      "建议买熟的黑豆和大麦（或自己炒香）。",
+      "放入破壁机煮水。",
+      "不可打碎，会有渣，只煮水喝。"
+    ],
+    "gear&time": "【花茶】模式 15分钟",
+    "taste": "焦香★★★★★ | 清爽★★★★☆ | 无糖★★★★★"
+  },
+  {
+    "id": 6016,
+    "category": "花果茶",
+    "name": "雪梨桔梗茶",
+    "description": "宣肺利咽，换季嗓子干痒专用。",
+    "ingredients": [
+      {"item": "雪梨", "amount": "1个"},
+      {"item": "桔梗", "amount": "5g"},
+      {"item": "甘草", "amount": "2片"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "药材洗净。",
+      "雪梨带皮切块。",
+      "一同煮水。"
+    ],
+    "gear&time": "【煮炖】模式 20分钟",
+    "taste": "甘甜★★★★☆ | 药草香★★☆☆ | 舒缓★★★★★"
+  },
+  {
+    "id": 6017,
+    "category": "花果茶",
+    "name": "柚子皮茶",
+    "description": "化痰止咳，变废为宝，微苦回甘。",
+    "ingredients": [
+      {"item": "柚子皮(去白瓤)", "amount": "10g"},
+      {"item": "冰糖", "amount": "30g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "柚子皮必须去掉白色部分，只留黄色表皮，切丝盐水洗净。",
+      "加冰糖煮水。",
+      "非常清香。"
+    ],
+    "gear&time": "【花茶】模式 15分钟",
+    "taste": "微苦★★☆☆ | 清香★★★★★ | 止咳★★★★☆"
+  },
+  {
+    "id": 6018,
+    "category": "花果茶",
+    "name": "荔枝红茶",
+    "description": "贵妃醉酒般的甜蜜，果香红茶。",
+    "ingredients": [
+      {"item": "荔枝", "amount": "5颗"},
+      {"item": "红茶包", "amount": "1包"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "荔枝去壳去核。",
+      "煮沸水后放入荔枝和茶包。",
+      "浸泡或微煮2分钟即可。"
+    ],
+    "gear&time": "【花茶】模式 5分钟",
+    "taste": "甜润★★★★☆ | 醇厚★★★☆☆ | 香气★★★★★"
+  },
+  {
+    "id": 6019,
+    "category": "花果茶",
+    "name": "杏仁奶茶(煮)",
+    "description": "老北京风味，温暖润肺。",
+    "ingredients": [
+      {"item": "露露/杏仁露", "amount": "250ml"},
+      {"item": "牛奶", "amount": "250ml"},
+      {"item": "清水", "amount": "100ml"},
+      {"item": "糯米粉", "amount": "1勺(可选)"}
+    ],
+    "steps": [
+      "将杏仁露和牛奶倒入破壁机。",
+      "选择加热搅拌。",
+      "如果喜欢稠的，加一点糯米粉水勾芡。"
+    ],
+    "gear&time": "【热饮/加热】模式 5分钟",
+    "taste": "奶香★★★★★ | 杏仁味★★★★☆ | 顺滑★★★★☆"
+  },
+  {
+    "id": 6020,
+    "category": "花果茶",
+    "name": "酸梅汤",
+    "description": "夏日解暑，去油解腻，自制更健康。",
+    "ingredients": [
+      {"item": "乌梅", "amount": "5颗"},
+      {"item": "山楂", "amount": "10g"},
+      {"item": "陈皮", "amount": "1瓣"},
+      {"item": "甘草", "amount": "2片"},
+      {"item": "洛神花", "amount": "2朵"},
+      {"item": "清水", "amount": "1000ml"},
+      {"item": "冰糖", "amount": "50g"}
+    ],
+    "steps": [
+      "药材包洗净浸泡10分钟。",
+      "放入破壁机煮炖。",
+      "冷藏后口感更佳。"
+    ],
+    "gear&time": "【煮炖/花茶】模式 30分钟",
+    "taste": "酸甜★★★★★ | 烟熏味★★☆☆ | 解暑★★★★★"
+  },
+  {
+    "id": 6021,
+    "category": "花果茶",
+    "name": "冬瓜荷叶茶",
+    "description": "利尿刮油，减肥期间的天然饮料。",
+    "ingredients": [
+      {"item": "带皮冬瓜", "amount": "100g"},
+      {"item": "干荷叶", "amount": "5g"},
+      {"item": "清水", "amount": "1000ml"}
+    ],
+    "steps": [
+      "冬瓜一定要带皮，祛湿效果才好，切块。",
+      "荷叶冲洗。",
+      "一起煮水。"
+    ],
+    "gear&time": "【煮炖】模式 20分钟",
+    "taste": "清淡★★★★☆ | 草本味★★★☆☆ | 排水★★★★★"
+  },
+  {
+    "id": 7001,
+    "category": "滋补汤",
+    "name": "鲫鱼豆腐汤(浓白版)",
+    "description": "破壁机将鱼骨打碎融入汤中，补钙神器，汤色如奶。",
+    "ingredients": [
+      {"item": "小鲫鱼", "amount": "1条"},
+      {"item": "豆腐", "amount": "100g"},
+      {"item": "姜片", "amount": "3片"},
+      {"item": "开水", "amount": "800ml"}
+    ],
+    "steps": [
+      "鲫鱼煎至两面金黄（去腥关键），去除内脏黑膜。",
+      "将煎好的鱼、姜片放入破壁机，加入**开水**（出白汤关键）。",
+      "选择【鱼汤】或【浓汤】模式打碎。",
+      "最后放入豆腐块，利用余温烫熟或点动搅拌几秒。"
+    ],
+    "gear&time": "【鱼汤/浓汤】模式 约25分钟",
+    "taste": "鲜美★★★★★ | 浓白★★★★★ | 无刺★★★★★"
+  },
+  {
+    "id": 7002,
+    "category": "滋补汤",
+    "name": "五红汤",
+    "description": "补气养血，女性经期后、备孕期佳品。",
+    "ingredients": [
+      {"item": "红豆", "amount": "30g"},
+      {"item": "花生(红皮)", "amount": "30g"},
+      {"item": "红枣", "amount": "5颗"},
+      {"item": "枸杞", "amount": "10g"},
+      {"item": "红糖", "amount": "20g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "红豆提前浸泡。",
+      "所有材料放入破壁机。",
+      "打成细腻的糊羹，比煮水更好吸收。"
+    ],
+    "gear&time": "【米糊/豆浆】模式 30分钟",
+    "taste": "甜糯★★★★☆ | 滋补★★★★★ | 气色红润★★★★★"
+  },
+  {
+    "id": 7003,
+    "category": "滋补汤",
+    "name": "排骨山药浓汤",
+    "description": "健脾养胃，将肉和山药打碎，适合老人吞咽。",
+    "ingredients": [
+      {"item": "排骨(去骨肉)", "amount": "80g"},
+      {"item": "铁棍山药", "amount": "100g"},
+      {"item": "姜片", "amount": "2片"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "排骨焯水去腥，剔除骨头只留肉。",
+      "山药去皮切块。",
+      "加水选择浓汤模式打成羹。"
+    ],
+    "gear&time": "【浓汤】模式 30分钟",
+    "taste": "咸鲜★★★★☆ | 顺滑★★★★★ | 易消化★★★★★"
+  },
+  {
+    "id": 7004,
+    "category": "滋补汤",
+    "name": "乌鸡红枣汤",
+    "description": "大补元气，适合体虚乏力者。",
+    "ingredients": [
+      {"item": "乌鸡肉(去骨)", "amount": "100g"},
+      {"item": "红枣", "amount": "4颗"},
+      {"item": "香菇", "amount": "2朵"},
+      {"item": "清水", "amount": "800ml"},
+      {"item": "盐", "amount": "适量"}
+    ],
+    "steps": [
+      "乌鸡肉焯水。",
+      "所有食材放入破壁机。",
+      "打成肉糜浓汤。"
+    ],
+    "gear&time": "【浓汤】模式 30分钟",
+    "taste": "浓郁★★★★☆ | 鲜香★★★★☆ | 滋补★★★★★"
+  },
+  {
+    "id": 7005,
+    "category": "滋补汤",
+    "name": "核桃黑芝麻糊汤",
+    "description": "补肾益脑，经典的滋补甜汤。",
+    "ingredients": [
+      {"item": "核桃仁", "amount": "40g"},
+      {"item": "黑芝麻", "amount": "30g"},
+      {"item": "大米", "amount": "20g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "大米增加粘稠度。",
+      "核桃芝麻洗净。",
+      "打成细腻糊状。"
+    ],
+    "gear&time": "【米糊/芝麻糊】模式 25分钟",
+    "taste": "香气★★★★★ | 顺滑★★★★☆ | 乌发★★★★☆"
+  },
+  {
+    "id": 7006,
+    "category": "滋补汤",
+    "name": "莲藕花生猪蹄汤(浓汤版)",
+    "description": "满满胶原蛋白，美容养颜，汤汁浓稠。",
+    "ingredients": [
+      {"item": "熟猪蹄肉(去骨)", "amount": "100g"},
+      {"item": "莲藕", "amount": "100g"},
+      {"item": "花生", "amount": "30g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "建议用炖好的猪蹄拆肉，或者生肉丁焯水煮久一点。",
+      "莲藕切块。",
+      "打成浓汤饮用。"
+    ],
+    "gear&time": "【浓汤】模式 30分钟",
+    "taste": "咸甜★★★☆☆ | 胶质★★★★★ | 浓厚★★★★☆"
+  },
+  {
+    "id": 7007,
+    "category": "滋补汤",
+    "name": "小米海参汤",
+    "description": "高端滋补，修复胃黏膜，术后恢复佳品。",
+    "ingredients": [
+      {"item": "即食海参", "amount": "1根"},
+      {"item": "小米", "amount": "50g"},
+      {"item": "姜丝", "amount": "少许"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "小米先煮成米油（米糊模式）。",
+      "海参切小丁，程序结束前放入，或者煮好后放入搅拌一下。",
+      "不建议把海参完全打碎，保留口感。"
+    ],
+    "gear&time": "【米糊】模式 25分钟",
+    "taste": "鲜美★★★★☆ | 养胃★★★★★ | 奢华★★★★☆"
+  },
+  {
+    "id": 7008,
+    "category": "滋补汤",
+    "name": "当归黄芪党参汤",
+    "description": "补气补血经典方，适合气血两虚。",
+    "ingredients": [
+      {"item": "黄芪", "amount": "10g"},
+      {"item": "当归", "amount": "5g"},
+      {"item": "党参", "amount": "5g"},
+      {"item": "红枣", "amount": "3颗"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "药材洗净浸泡。",
+      "入机烹煮。",
+      "只喝汤不吃渣。"
+    ],
+    "gear&time": "【煮炖】模式 30分钟",
+    "taste": "药味★★★☆☆ | 回甘★★★☆☆ | 提气★★★★★"
+  },
+  {
+    "id": 7009,
+    "category": "滋补汤",
+    "name": "四神汤(糊)",
+    "description": "健脾祛湿第一方，调理脾胃虚弱。",
+    "ingredients": [
+      {"item": "茯苓", "amount": "10g"},
+      {"item": "淮山/山药干", "amount": "10g"},
+      {"item": "莲子", "amount": "10g"},
+      {"item": "芡实", "amount": "10g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "四味药材较硬，需提前浸泡2小时。",
+      "放入破壁机打成糊，比煮水喝效果好，全吃进肚子里。",
+      "可加少许瘦肉一起打成咸味。"
+    ],
+    "gear&time": "【米糊/滋补汤】模式 30分钟",
+    "taste": "清淡★★★☆☆ | 饱腹★★★★☆ | 健脾★★★★★"
+  },
+  {
+    "id": 7010,
+    "category": "滋补汤",
+    "name": "银耳木瓜牛奶羹",
+    "description": "滋润肌肤，丰胸养颜。",
+    "ingredients": [
+      {"item": "银耳", "amount": "1/4朵"},
+      {"item": "木瓜", "amount": "100g"},
+      {"item": "牛奶", "amount": "200ml"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "银耳泡发撕碎。",
+      "先将银耳和水煮出胶。",
+      "最后加入木瓜和牛奶搅拌。"
+    ],
+    "gear&time": "【滋补汤】模式 30分钟",
+    "taste": "顺滑★★★★★ | 奶香★★★★☆ | 甜美★★★★☆"
+  },
+  {
+    "id": 7011,
+    "category": "滋补汤",
+    "name": "猪肚白果汤(浓汤)",
+    "description": "健脾养胃，温补。",
+    "ingredients": [
+      {"item": "熟猪肚", "amount": "80g"},
+      {"item": "白果/银杏", "amount": "10颗"},
+      {"item": "胡椒粉", "amount": "1勺"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "猪肚难打，建议用炖熟的猪肚切丝。",
+      "白果去芯（有微毒）。",
+      "加入白胡椒粉是灵魂。",
+      "打成浓白汤汁。"
+    ],
+    "gear&time": "【浓汤】模式 30分钟",
+    "taste": "辛辣★★☆☆ | 鲜香★★★★☆ | 暖胃★★★★★"
+  },
+  {
+    "id": 7012,
+    "category": "滋补汤",
+    "name": "虫草花玉米鸡汤",
+    "description": "提高免疫力，汤色金黄诱人。",
+    "ingredients": [
+      {"item": "干虫草花", "amount": "10g"},
+      {"item": "甜玉米粒", "amount": "50g"},
+      {"item": "鸡肉", "amount": "50g"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "虫草花洗净。",
+      "所有材料入机打煮。",
+      "咸口浓汤。"
+    ],
+    "gear&time": "【浓汤】模式 30分钟",
+    "taste": "鲜甜★★★★★ | 顺滑★★★★☆ | 营养★★★★☆"
+  },
+  {
+    "id": 7013,
+    "category": "滋补汤",
+    "name": "酒酿蛋花汤",
+    "description": "丰胸催奶，暖宫。",
+    "ingredients": [
+      {"item": "甜酒酿", "amount": "3勺"},
+      {"item": "鸡蛋", "amount": "1个"},
+      {"item": "枸杞", "amount": "少许"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "先煮水和枸杞。",
+      "水开后倒入酒酿。",
+      "最后淋入蛋液，点动搅拌一下成蛋花，不要打碎。"
+    ],
+    "gear&time": "【加热/煮炖】模式 + 手动",
+    "taste": "酸甜★★★☆☆ | 酒香★★★☆☆ | 滋补★★★★☆"
+  },
+  {
+    "id": 7014,
+    "category": "滋补汤",
+    "name": "素高汤(菌菇版)",
+    "description": "无需肉也能做出鲜掉眉毛的汤底。",
+    "ingredients": [
+      {"item": "香菇", "amount": "2朵"},
+      {"item": "口蘑", "amount": "2朵"},
+      {"item": "杏鲍菇", "amount": "半根"},
+      {"item": "腰果", "amount": "10颗"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "蘑菇类焯水去土腥味。",
+      "腰果提供油脂和奶白感。",
+      "打成细腻浓汤，可做面条汤底。"
+    ],
+    "gear&time": "【浓汤】模式 25分钟",
+    "taste": "鲜美★★★★★ | 浓郁★★★★☆ | 全素★★★★★"
+  },
+  {
+    "id": 7015,
+    "category": "滋补汤",
+    "name": "黄豆猪蹄汤",
+    "description": "通乳，补充胶原蛋白。",
+    "ingredients": [
+      {"item": "黄豆", "amount": "50g"},
+      {"item": "猪蹄肉", "amount": "80g"},
+      {"item": "姜片", "amount": "2片"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "黄豆浸泡，猪蹄去骨。",
+      "打成浓汤。",
+      "口感像咸豆浆加肉味。"
+    ],
+    "gear&time": "【豆浆/浓汤】模式 30分钟",
+    "taste": "豆香★★★★☆ | 咸鲜★★★☆☆ | 催乳★★★★★"
+  },
+  {
+    "id": 7016,
+    "category": "滋补汤",
+    "name": "燕麦鱼胶奶",
+    "description": "富含胶原蛋白，无腥味做法。",
+    "ingredients": [
+      {"item": "已泡发花胶", "amount": "50g"},
+      {"item": "牛奶", "amount": "200ml"},
+      {"item": "燕麦", "amount": "20g"},
+      {"item": "姜片", "amount": "1片(煮时用)"}
+    ],
+    "steps": [
+      "花胶加姜片煮熟去腥。",
+      "捞出花胶放入破壁机，加牛奶和燕麦。",
+      "打成奶昔状，燕麦可去腥增香。"
+    ],
+    "gear&time": "【豆浆/米糊】模式 20分钟",
+    "taste": "奶香★★★★☆ | 胶质★★★★★ | 无腥★★★★☆"
+  },
+  {
+    "id": 7017,
+    "category": "滋补汤",
+    "name": "桂花鸡头米汤",
+    "description": "江南滋补名吃，健脾益肾。",
+    "ingredients": [
+      {"item": "鸡头米(芡实)", "amount": "50g"},
+      {"item": "干桂花", "amount": "少许"},
+      {"item": "冰糖", "amount": "适量"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "鲜鸡头米易熟，干芡实需泡。",
+      "可选择保留颗粒的煮炖，或者打成糊。",
+      "出锅撒桂花。"
+    ],
+    "gear&time": "【煮炖】模式 20分钟",
+    "taste": "清香★★★★★ | 软糯★★★★☆ | 雅致★★★★★"
+  },
+  {
+    "id": 7018,
+    "category": "滋补汤",
+    "name": "阿胶红枣羹",
+    "description": "补血止血，滋阴润肺，贵妇级保养。",
+    "ingredients": [
+      {"item": "阿胶块", "amount": "10g"},
+      {"item": "红枣", "amount": "5颗"},
+      {"item": "黄酒", "amount": "1勺"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "阿胶打粉或敲碎溶化。",
+      "红枣去核。",
+      "加黄酒去腥助药性。",
+      "打煮成羹。"
+    ],
+    "gear&time": "【滋补汤】模式 25分钟",
+    "taste": "甜润★★★☆☆ | 药膳★★★☆☆ | 滋补★★★★★"
+  },
+  {
+    "id": 7019,
+    "category": "滋补汤",
+    "name": "牛蒡排骨汤(滤渣)",
+    "description": "清热解毒，通便，类似日本风味。",
+    "ingredients": [
+      {"item": "新鲜牛蒡", "amount": "50g"},
+      {"item": "排骨", "amount": "100g"},
+      {"item": "胡萝卜", "amount": "50g"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "牛蒡去皮切片。",
+      "排骨焯水。",
+      "如果机器不能加热煮骨头，建议煮好后只取汤和食材打碎，或只喝汤。"
+    ],
+    "gear&time": "【煮炖】模式 40分钟",
+    "taste": "清淡★★★★☆ | 土香★★☆☆ | 养生★★★★☆"
+  },
+  {
+    "id": 7020,
+    "category": "滋补汤",
+    "name": "葛根粉羹",
+    "description": "解酒护肝，调节内分泌。",
+    "ingredients": [
+      {"item": "葛根粉/干葛根", "amount": "30g"},
+      {"item": "冰糖", "amount": "适量"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "如果是干葛根，放入破壁机打成粉煮成糊。",
+      "晶莹剔透，口感顺滑。"
+    ],
+    "gear&time": "【米糊】模式 20分钟",
+    "taste": "清淡★★★☆☆ | 顺滑★★★★★ | 解酒★★★★☆"
+  },
+  {
+    "id": 7021,
+    "category": "滋补汤",
+    "name": "陈皮赤小豆汤",
+    "description": "祛湿消肿，利水。",
+    "ingredients": [
+      {"item": "赤小豆", "amount": "40g"},
+      {"item": "陈皮", "amount": "1瓣"},
+      {"item": "清水", "amount": "800ml"}
+    ],
+    "steps": [
+      "赤小豆细长，祛湿效果比红豆好。",
+      "陈皮理气。",
+      "打成沙沙的汤水。"
+    ],
+    "gear&time": "【豆浆/煮炖】模式 30分钟",
+    "taste": "甘苦★★☆☆ | 豆香★★★☆☆ | 祛湿★★★★★"
+  },
+  {
+    "id": 8001,
+    "category": "浓汤",
+    "name": "法式奶油蘑菇汤",
+    "description": "西餐厅必点，奶香浓郁，口感细腻。",
+    "ingredients": [
+      {"item": "口蘑", "amount": "150g"},
+      {"item": "洋葱", "amount": "1/4个"},
+      {"item": "土豆", "amount": "1个(小)"},
+      {"item": "牛奶", "amount": "200ml"},
+      {"item": "黄油", "amount": "10g"},
+      {"item": "黑胡椒", "amount": "适量"}
+    ],
+    "steps": [
+      "口蘑洋葱切丁，建议先用黄油炒香（更正宗），嫌麻烦可直放。",
+      "土豆提供淀粉质，增加浓稠度。",
+      "所有食材加水煮打，最后加牛奶和黑胡椒。"
+    ],
+    "gear&time": "【浓汤】模式 25分钟",
+    "taste": "香浓★★★★★ | 咸鲜★★★★☆ | 西式★★★★★"
+  },
+  {
+    "id": 8002,
+    "category": "浓汤",
+    "name": "南瓜奶油浓汤",
+    "description": "色泽金黄，咸甜交织，万圣节风味。",
+    "ingredients": [
+      {"item": "贝贝南瓜", "amount": "200g"},
+      {"item": "牛奶", "amount": "150ml"},
+      {"item": "淡奶油", "amount": "30ml"},
+      {"item": "盐", "amount": "少许"}
+    ],
+    "steps": [
+      "南瓜不去皮颜色更绿，去皮更黄，建议去皮。",
+      "加少量水煮打。",
+      "最后加入奶制品搅拌。"
+    ],
+    "gear&time": "【米糊/浓汤】模式 25分钟",
+    "taste": "甜咸★★★★☆ | 细腻★★★★★ | 颜值★★★★★"
+  },
+  {
+    "id": 8003,
+    "category": "浓汤",
+    "name": "西兰花土豆浓汤",
+    "description": "清新绿色，营养丰富，孩子不爱吃蔬菜就这样做。",
+    "ingredients": [
+      {"item": "西兰花", "amount": "100g"},
+      {"item": "土豆", "amount": "100g"},
+      {"item": "洋葱", "amount": "20g"},
+      {"item": "牛奶", "amount": "100ml"},
+      {"item": "清水", "amount": "400ml"}
+    ],
+    "steps": [
+      "西兰花焯水（去虫和农残）。",
+      "土豆增稠。",
+      "打成绿色浓汤，加盐黑胡椒调味。"
+    ],
+    "gear&time": "【浓汤】模式 25分钟",
+    "taste": "清香★★★★☆ | 咸鲜★★★☆☆ | 顺滑★★★★☆"
+  },
+  {
+    "id": 8004,
+    "category": "浓汤",
+    "name": "玉米培根浓汤",
+    "description": "咸香可口，早餐搭配面包绝佳。",
+    "ingredients": [
+      {"item": "甜玉米粒", "amount": "150g"},
+      {"item": "土豆", "amount": "50g"},
+      {"item": "培根", "amount": "2片"},
+      {"item": "牛奶", "amount": "200ml"}
+    ],
+    "steps": [
+      "培根煎一下更香，切碎。",
+      "玉米和土豆先打成浓汤。",
+      "最后撒入培根碎（不打碎培根保留口感）。"
+    ],
+    "gear&time": "【玉米汁/浓汤】模式 20分钟",
+    "taste": "香甜★★★★☆ | 咸香★★★★☆ | 饱腹★★★★☆"
+  },
+  {
+    "id": 8005,
+    "category": "浓汤",
+    "name": "番茄牛肉浓汤",
+    "description": "酸爽开胃，类似罗宋汤的糊状版。",
+    "ingredients": [
+      {"item": "番茄", "amount": "2个"},
+      {"item": "熟牛肉/肥牛", "amount": "50g"},
+      {"item": "洋葱", "amount": "30g"},
+      {"item": "胡萝卜", "amount": "30g"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "番茄去皮。",
+      "牛肉煮熟。",
+      "所有材料入机打成红汤。"
+    ],
+    "gear&time": "【浓汤】模式 25分钟",
+    "taste": "酸咸★★★★★ | 浓郁★★★★☆ | 开胃★★★★★"
+  },
+  {
+    "id": 8006,
+    "category": "浓汤",
+    "name": "紫薯银耳浓汤",
+    "description": "梦幻紫色，既是汤也是甜品，胶质满满。",
+    "ingredients": [
+      {"item": "紫薯", "amount": "100g"},
+      {"item": "干银耳", "amount": "1/4朵"},
+      {"item": "冰糖", "amount": "适量"},
+      {"item": "清水", "amount": "700ml"}
+    ],
+    "steps": [
+      "银耳泡发。",
+      "紫薯切块。",
+      "打成胶质浓汤。"
+    ],
+    "gear&time": "【米糊/浓汤】模式 25分钟",
+    "taste": "甜糯★★★★☆ | 顺滑★★★★★ | 颜值★★★★★"
+  },
+  {
+    "id": 8007,
+    "category": "浓汤",
+    "name": "胡萝卜生姜浓汤",
+    "description": "西式暖身汤，微辣，非常适合感冒时喝。",
+    "ingredients": [
+      {"item": "胡萝卜", "amount": "200g"},
+      {"item": "姜", "amount": "10g"},
+      {"item": "洋葱", "amount": "30g"},
+      {"item": "橙汁", "amount": "50ml"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "胡萝卜洋葱切块。",
+      "加姜片打煮。",
+      "最后加入橙汁提鲜（点睛之笔）。"
+    ],
+    "gear&time": "【浓汤】模式 25分钟",
+    "taste": "甜辣★★★☆☆ | 鲜艳★★★★★ | 暖身★★★★★"
+  },
+  {
+    "id": 8008,
+    "category": "浓汤",
+    "name": "菠菜虾仁翡翠汤",
+    "description": "颜色翠绿，鲜美补钙。",
+    "ingredients": [
+      {"item": "菠菜", "amount": "100g"},
+      {"item": "虾仁", "amount": "5个"},
+      {"item": "豆腐", "amount": "50g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "菠菜焯水去草酸（保持绿色）。",
+      "虾仁焯水。",
+      "一起打成绿色的海鲜浓汤。"
+    ],
+    "gear&time": "【浓汤】模式 20分钟",
+    "taste": "清淡★★★★☆ | 鲜美★★★★☆ | 营养★★★★★"
+  },
+  {
+    "id": 8009,
+    "category": "浓汤",
+    "name": "韩式南瓜粥(浓汤版)",
+    "description": "韩剧同款，细腻无渣，配年糕绝佳。",
+    "ingredients": [
+      {"item": "老南瓜", "amount": "250g"},
+      {"item": "糯米粉", "amount": "20g"},
+      {"item": "冰糖", "amount": "20g"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "南瓜加水打煮。",
+      "糯米粉加水调成汁。",
+      "最后倒入糯米水勾芡搅拌。"
+    ],
+    "gear&time": "【米糊】模式 25分钟",
+    "taste": "甜★★★★★ | 浓稠★★★★★ | 细腻★★★★★"
+  },
+  {
+    "id": 8010,
+    "category": "浓汤",
+    "name": "豌豆薄荷浓汤",
+    "description": "英式风味，颜色嫩绿，清新爽口。",
+    "ingredients": [
+      {"item": "甜豌豆(冷冻)", "amount": "150g"},
+      {"item": "薄荷叶", "amount": "5片"},
+      {"item": "土豆", "amount": "50g"},
+      {"item": "牛奶", "amount": "100ml"},
+      {"item": "清水", "amount": "400ml"}
+    ],
+    "steps": [
+      "豌豆和土豆煮熟打碎。",
+      "最后放入薄荷叶打几秒（不要煮薄荷，会变黑变苦）。",
+      "加盐调味。"
+    ],
+    "gear&time": "【浓汤】模式 20分钟",
+    "taste": "清新★★★★★ | 豆香★★★☆☆ | 异域★★★★☆"
+  },
+  {
+    "id": 8011,
+    "category": "浓汤",
+    "name": "红薯浓汤",
+    "description": "比南瓜汤更甜糯，饱腹感强。",
+    "ingredients": [
+      {"item": "红薯", "amount": "200g"},
+      {"item": "洋葱", "amount": "20g"},
+      {"item": "牛奶", "amount": "100ml"},
+      {"item": "黄油", "amount": "5g"}
+    ],
+    "steps": [
+      "洋葱黄油炒香放入破壁机。",
+      "红薯切块。",
+      "打成金黄浓汤。"
+    ],
+    "gear&time": "【浓汤】模式 25分钟",
+    "taste": "甜★★★★☆ | 浓稠★★★★☆ | 香气★★★★☆"
+  },
+  {
+    "id": 8012,
+    "category": "浓汤",
+    "name": "芦笋鸡肉浓汤",
+    "description": "高蛋白低脂，高级西餐口感。",
+    "ingredients": [
+      {"item": "芦笋", "amount": "100g"},
+      {"item": "鸡胸肉", "amount": "50g"},
+      {"item": "土豆", "amount": "30g"},
+      {"item": "牛奶", "amount": "100ml"}
+    ],
+    "steps": [
+      "芦笋去老根，留几个尖尖最后装饰。",
+      "鸡肉土豆入机。",
+      "打成淡绿色浓汤。"
+    ],
+    "gear&time": "【浓汤】模式 25分钟",
+    "taste": "清香★★★★☆ | 鲜美★★★☆☆ | 顺滑★★★★☆"
+  },
+  {
+    "id": 8013,
+    "category": "浓汤",
+    "name": "栗子浓汤",
+    "description": "秋季限定，香甜醇厚，口感像蒙布朗。",
+    "ingredients": [
+      {"item": "熟板栗仁", "amount": "100g"},
+      {"item": "洋葱", "amount": "20g"},
+      {"item": "牛奶/奶油", "amount": "100ml"},
+      {"item": "清水", "amount": "400ml"}
+    ],
+    "steps": [
+      "板栗本身粉糯，无需加土豆。",
+      "打成褐色浓汤。",
+      "适合做早餐。"
+    ],
+    "gear&time": "【浓汤】模式 20分钟",
+    "taste": "粉糯★★★★★ | 香甜★★★☆☆ | 浓郁★★★★★"
+  },
+  {
+    "id": 8014,
+    "category": "浓汤",
+    "name": "冬瓜干贝浓汤",
+    "description": "中式食材西式做法，极其鲜美。",
+    "ingredients": [
+      {"item": "冬瓜", "amount": "150g"},
+      {"item": "干贝", "amount": "10g"},
+      {"item": "姜片", "amount": "1片"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "干贝泡发。",
+      "冬瓜去皮切块。",
+      "打成白色浓汤，鲜味十足。"
+    ],
+    "gear&time": "【浓汤】模式 25分钟",
+    "taste": "鲜★★★★★ | 清淡★★★☆☆ | 顺滑★★★★☆"
+  },
+  {
+    "id": 8015,
+    "category": "浓汤",
+    "name": "香芋椰汁浓汤",
+    "description": "芋泥控必做，香甜丝滑。",
+    "ingredients": [
+      {"item": "荔浦芋头", "amount": "150g"},
+      {"item": "椰浆", "amount": "100ml"},
+      {"item": "冰糖", "amount": "20g"},
+      {"item": "清水", "amount": "400ml"}
+    ],
+    "steps": [
+      "芋头蒸熟或直接煮打。",
+      "加入椰浆。",
+      "紫色浓汤。"
+    ],
+    "gear&time": "【米糊/浓汤】模式 25分钟",
+    "taste": "香浓★★★★★ | 绵密★★★★★ | 甜美★★★★☆"
+  },
+  {
+    "id": 8016,
+    "category": "浓汤",
+    "name": "番茄鹰嘴豆浓汤",
+    "description": "地中海风味，高蛋白高纤维。",
+    "ingredients": [
+      {"item": "番茄", "amount": "2个"},
+      {"item": "熟鹰嘴豆", "amount": "50g"},
+      {"item": "洋葱", "amount": "30g"},
+      {"item": "孜然粉", "amount": "少许"}
+    ],
+    "steps": [
+      "鹰嘴豆罐头或提前煮熟的。",
+      "打成浓汤，鹰嘴豆会带来独特的沙沙口感。",
+      "加孜然风味独特。"
+    ],
+    "gear&time": "【浓汤】模式 20分钟",
+    "taste": "酸咸★★★☆☆ | 沙感★★★★☆ | 异域★★★★☆"
+  },
+  {
+    "id": 8017,
+    "category": "浓汤",
+    "name": "莲藕雪梨浓汤",
+    "description": "润肺清热，清甜的白色浓汤。",
+    "ingredients": [
+      {"item": "莲藕", "amount": "100g"},
+      {"item": "雪梨", "amount": "1个"},
+      {"item": "百合", "amount": "10g"},
+      {"item": "清水", "amount": "600ml"}
+    ],
+    "steps": [
+      "莲藕选脆藕，颜色白。",
+      "打成细腻的汁。",
+      "清甜无需加糖。"
+    ],
+    "gear&time": "【米糊/浓汤】模式 25分钟",
+    "taste": "清甜★★★★☆ | 细腻★★★★☆ | 润燥★★★★★"
+  },
+  {
+    "id": 8018,
+    "category": "浓汤",
+    "name": "牛油果菠菜冷汤",
+    "description": "不用煮的浓汤，夏日轻食，清爽。",
+    "ingredients": [
+      {"item": "牛油果", "amount": "1个"},
+      {"item": "菠菜", "amount": "50g"},
+      {"item": "酸奶", "amount": "100g"},
+      {"item": "坚果", "amount": "少许"},
+      {"item": "凉白开", "amount": "200ml"}
+    ],
+    "steps": [
+      "菠菜焯水挤干水分。",
+      "牛油果去皮。",
+      "所有材料放入破壁机搅拌，无需加热。",
+      "撒上坚果碎。"
+    ],
+    "gear&time": "【果蔬】键 2分钟",
+    "taste": "清新★★★★★ | 顺滑★★★★★ | 0负担★★★★★"
+  },
+  {
+    "id": 8019,
+    "category": "浓汤",
+    "name": "大葱土豆浓汤",
+    "description": "缓解感冒初起，大葱甜味和土豆很搭。",
+    "ingredients": [
+      {"item": "大葱(葱白)", "amount": "1根"},
+      {"item": "土豆", "amount": "150g"},
+      {"item": "牛奶", "amount": "100ml"},
+      {"item": "黄油", "amount": "10g"}
+    ],
+    "steps": [
+      "葱白切段，最好用黄油炒软。",
+      "加土豆煮打。",
+      "神奇的好喝，不辛辣。"
+    ],
+    "gear&time": "【浓汤】模式 25分钟",
+    "taste": "微甜★★★☆☆ | 浓郁★★★★☆ | 治愈★★★★☆"
+  },
+  {
+    "id": 8020,
+    "category": "浓汤",
+    "name": "蟹味菇蛋花浓汤",
+    "description": "十分钟快手汤，鲜美。",
+    "ingredients": [
+      {"item": "蟹味菇", "amount": "100g"},
+      {"item": "鸡蛋", "amount": "1个"},
+      {"item": "豆腐", "amount": "50g"},
+      {"item": "水淀粉", "amount": "适量"}
+    ],
+    "steps": [
+      "蟹味菇和豆腐先用破壁机稍微打碎（不要成泥，点动）。",
+      "加热煮开。",
+      "淋入蛋液和水淀粉勾芡。"
+    ],
+    "gear&time": "【点动】+【煮炖】模式",
+    "taste": "鲜美★★★★★ | 顺滑★★★★☆ | 简单★★★★★"
+  },
+  {
+    "id": 8021,
+    "category": "浓汤",
+    "name": "彩椒腰果浓汤",
+    "description": "全素维C汤，颜色鲜艳橙黄。",
+    "ingredients": [
+      {"item": "红/黄彩椒", "amount": "1个"},
+      {"item": "生腰果", "amount": "15颗"},
+      {"item": "洋葱", "amount": "20g"},
+      {"item": "清水", "amount": "500ml"}
+    ],
+    "steps": [
+      "彩椒去籽。",
+      "腰果提供油脂，打出来像奶油一样。",
+      "加盐调味。"
+    ],
+    "gear&time": "【浓汤】模式 20分钟",
+    "taste": "清甜★★★☆☆ | 坚果香★★★☆☆ | 顺滑★★★★★"
+  }
+];
+        // ==========================================
+        // 2. Configuration & Logic
+        // ==========================================
+        const config = {
+            email: "yunice348@gmail.com",
+            cats: ['豆浆', '米糊', '果蔬', '冰沙', '熬粥', '花果茶', '滋补汤', '浓汤'],
+            icons: {
+                '豆浆': 'fa-glass-water', '米糊': 'fa-bowl-rice', '果蔬': 'fa-carrot',
+                '冰沙': 'fa-ice-cream', '熬粥': 'fa-spoon', '花果茶': 'fa-mug-hot',
+                '滋补汤': 'fa-heart-pulse', '浓汤': 'fa-bowl-food'
+            },
+            // 推荐关键词映射
+            keywords: {
+                // Moods
+                'happy': ['甜', '奶', '巧克力', '冰沙', '蛋糕'],
+                'sad': ['甜', '热', '粥', '糖', '可可'],
+                'tired': ['酸', '维C', '橙', '柠檬', '果蔬', '参'],
+                'fit': ['燕麦', '蛋白', '鸡', '牛油果', '豆浆', '低脂'],
+                'anxious': ['绿豆', '百合', '莲子', '清火', '茶'],
+                'bored': ['冰', '辣', '咖啡', '异域', '椰'],
+                
+                // Weather
+                'hot': ['冰', '绿豆', '果蔬', '清爽', '凉', '瓜'],
+                'cold': ['姜', '暖', '红枣', '粥', '汤', '热', '羊'],
+                'rainy': ['红豆', '薏米', '祛湿', '冬瓜', '陈皮'],
+                'windy': ['雪梨', '银耳', '润肺', '百合', '白茶'],
+                
+                // Signs (Elements)
+                'fire': ['能量', '红', '肉', '浓', '姜'],
+                'water': ['滋润', '汤', '水', '梨', '海鲜'],
+                'earth': ['薯', '豆', '米', '饱腹', '根茎'],
+                'air': ['清', '花', '茶', '果', '薄荷'],
+                
+                // Zodiac (Elements)
+                'rat_pig': ['滋润', '汤', '黑豆'], // 水
+                'tiger_rabbit': ['果蔬', '绿', '酸'], // 木
+                'snake_horse': ['红', '心', '苦'], // 火
+                'ox_dragon_goat_dog': ['甜', '黄', '米糊', '薯'], // 土
+                'monkey_rooster': ['白', '润肺', '杏仁', '奶'] // 金
+            }
+        };
+
+        // Smart Ingredient Icon Mapper (Symbol + Color + Action/State)
+        function getIngIcon(name) {
+            const n = name.toLowerCase();
+            
+            // 1. 状态/类型优先
+            if (n.includes('水') || n.includes('汁') || n.includes('液') || n.includes('油')) return '💧'; // 液体
+            if (n.includes('糖') || n.includes('盐') || n.includes('粉')) return '🍬'; // 粉末/调料
+            if (n.includes('米') || n.includes('麦') || n.includes('面')) return '🌾'; // 谷物
+            if (n.includes('肉') || n.includes('骨') || n.includes('鸡') || n.includes('牛') || n.includes('羊') || n.includes('猪')) return '🥩'; // 肉类
+            if (n.includes('鱼') || n.includes('虾') || n.includes('海')) return '🐟'; // 海鲜
+            if (n.includes('冰')) return '🧊'; // 冰
+            if (n.includes('叶') || n.includes('菜') || n.includes('葱') || n.includes('香菜')) return '🥬'; // 蔬菜叶
+            if (n.includes('果') || n.includes('梨') || n.includes('桃') || n.includes('蕉') || n.includes('莓')) return '🍎'; // 水果
+            if (n.includes('姜') || n.includes('蒜')) return '🧄'; // 辛香料
+
+            // 2. 颜色兜底 (通过名字猜颜色)
+            if (n.includes('黑') || n.includes('乌')) return '⚫';
+            if (n.includes('红') || n.includes('血') || n.includes('枣')) return '🔴';
+            if (n.includes('绿') || n.includes('青')) return '🟢';
+            if (n.includes('黄') || n.includes('金') || n.includes('南瓜') || n.includes('玉米')) return '🟡';
+            if (n.includes('白') || n.includes('银') || n.includes('奶') || n.includes('百合')) return '⚪';
+            if (n.includes('紫') || n.includes('蓝')) return '🟣';
+
+            // 3. 绝对通用兜底 (固体食材)
+            // 使用橙色小方块代表通用食材颗粒，比勺子更像原材料
+            return '🔸';
+        }
+
+        const app = {
+            state: {
+                favs: JSON.parse(localStorage.getItem('favs') || '[]'),
+                ratings: JSON.parse(localStorage.getItem('ratings') || '{}'),
+                uploads: JSON.parse(localStorage.getItem('uploads') || '[]'),
+                currId: null
+            },
+
+            init() {
+                this.renderCats();
+                this.bindSearch();
+                this.bindSwipe();
+            },
+
+            // --- Renderers ---
+            renderCats() {
+                const grid = document.getElementById('categoryGrid');
+                grid.innerHTML = config.cats.map(cat => `
+                    <div class="cat-item touch-scale" onclick="app.filterCat('${cat}')">
+                        <div class="cat-icon-box"><i class="fa-solid ${config.icons[cat]}"></i></div>
+                        <div class="cat-name">${cat}</div>
+                    </div>
+                `).join('');
+            },
+
+            renderList(list, targetId = 'recipeGrid') {
+                const grid = document.getElementById(targetId);
+                if (list.length === 0) {
+                    grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:30px; color:#999; font-size:13px;">暂无相关食谱</div>`;
+                    return;
+                }
+                grid.innerHTML = list.map(r => {
+                    const isFav = this.state.favs.includes(r.id);
+                    const userRating = this.state.ratings[r.id];
+                    
+                    // 解析味道标签 (取前2个)
+                    let tasteTags = '';
+                    if (r.taste) {
+                        const tastes = r.taste.split('|').map(t => t.trim().split('★')[0]).slice(0, 2);
+                        tasteTags = tastes.map(t => `<span class="rc-tag tag-taste">${t}</span>`).join('');
+                    }
+
+                    // 星级显示
+                    let starHtml = '';
+                    if (userRating) {
+                        starHtml = `<div class="rc-star"><i class="fa-solid fa-star"></i> ${userRating}</div>`;
+                    }
+
+                    return `
+                    <div class="recipe-card touch-scale" onclick="app.openDetail(${r.id})">
+                        <div class="rc-title">${r.name}</div>
+                        <div class="rc-desc">${r.description}</div>
+                        <div class="rc-footer">
+                            <span class="rc-tag tag-cat">${r.category}</span>
+                            ${tasteTags}
+                            <div class="rc-meta">
+                                ${starHtml}
+                                ${isFav ? '<i class="fa-solid fa-heart" style="color:var(--danger-color); font-size:12px;"></i>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `}).join('');
+            },
+
+            // --- Actions ---
+            filterCat(cat) {
+                document.getElementById('homeView').classList.add('hidden');
+                document.getElementById('listView').classList.remove('hidden');
+                document.getElementById('listTitle').innerText = cat;
+                this.renderList(recipes.filter(r => r.category === cat));
+            },
+
+            goHome() {
+                document.getElementById('homeView').classList.remove('hidden');
+                document.getElementById('listView').classList.add('hidden');
+                document.getElementById('mineView').classList.add('hidden');
+                document.getElementById('searchInput').value = '';
+            },
+
+            bindSearch() {
+                const input = document.getElementById('searchInput');
+                input.addEventListener('input', (e) => {
+                    const val = e.target.value.trim();
+                    if (!val) return;
+                    
+                    // 搜索逻辑：按空格、逗号分割关键词
+                    const terms = val.split(/[ ,，\s]+/).filter(t => t.length > 0);
+                    
+                    const results = recipes.filter(r => {
+                        const str = JSON.stringify(r).toLowerCase();
+                        // 必须包含所有关键词 (AND 逻辑)
+                        return terms.every(term => str.includes(term.toLowerCase()));
+                    });
+
+                    document.getElementById('homeView').classList.add('hidden');
+                    document.getElementById('listView').classList.remove('hidden');
+                    document.getElementById('listTitle').innerText = "搜索结果";
+                    this.renderList(results);
+                });
+            },
+
+            // --- Detail View Logic ---
+            openDetail(id) {
+                const r = recipes.find(i => i.id === id);
+                this.state.currId = id;
+                const isFav = this.state.favs.includes(id);
+                const rating = this.state.ratings[id] || 0;
+                
+                const html = `
+                    <div class="detail-title">${r.name}</div>
+                    <div class="detail-desc">${r.description}</div>
+                    
+                    <div class="section-head"><i class="fa-solid fa-basket-shopping"></i> 食材</div>
+                    <div>
+                        ${r.ingredients.map(i => `
+                            <div class="ing-row"><span>${getIngIcon(i.item)} ${i.item}</span><span style="color:var(--text-secondary)">${i.amount}</span></div>
+                        `).join('')}
+                    </div>
+
+                    <div class="section-head"><i class="fa-solid fa-list-ol"></i> 步骤</div>
+                    <div>
+                        ${r.steps.map((s, i) => `
+                            <div class="step-row"><div class="step-num">${i+1}</div><div>${s}</div></div>
+                        `).join('')}
+                    </div>
+
+                    <div class="section-head"><i class="fa-regular fa-clock"></i> 档位 & 时间</div>
+                    <div class="info-block">${r['gear&time']}</div>
+
+                    <div class="section-head"><i class="fa-regular fa-face-smile"></i> 风味</div>
+                    <div class="info-block">${r.taste || '标准'}</div>
+
+                    <div class="rating-stars">
+                        ${[1,2,3,4,5].map(i => `<i class="fa-solid fa-star star touch-scale ${i <= rating ? 'filled' : ''}" onclick="app.rate(${i})"></i>`).join('')}
+                    </div>
+
+                    <button class="btn-primary touch-scale" style="margin-top:10px; background:${isFav ? '#FF3B30' : '#000'}" onclick="app.toggleFav(${id})">
+                        <i class="fa-${isFav ? 'solid' : 'regular'} fa-heart"></i> ${isFav ? '取消收藏' : '收藏食谱'}
+                    </button>
+                    <div class="swipe-hint"><i class="fa-solid fa-arrow-left"></i> 左滑返回</div>
+                `;
+                document.getElementById('detailContent').innerHTML = html;
+                this.openModal('detailModal');
+            },
+
+            toggleFav(id) {
+                const idx = this.state.favs.indexOf(id);
+                if (idx > -1) this.state.favs.splice(idx, 1);
+                else this.state.favs.push(id);
+                localStorage.setItem('favs', JSON.stringify(this.state.favs));
+                this.openDetail(id);
+            },
+
+            rate(score) {
+                const id = this.state.currId;
+                this.state.ratings[id] = score;
+                localStorage.setItem('ratings', JSON.stringify(this.state.ratings));
+                this.openDetail(id);
+                this.openModal('reviewModal');
+            },
+
+            // 删除评分 (在我的评价中调用)
+            delRate(id) {
+                delete this.state.ratings[id];
+                localStorage.setItem('ratings', JSON.stringify(this.state.ratings));
+                this.switchMineTab('rate'); // 刷新列表
+            },
+
+            sendReviewEmail() {
+                const text = document.getElementById('reviewText').value;
+                const id = this.state.currId;
+                const r = recipes.find(i => i.id === id);
+                const score = this.state.ratings[id];
+                const body = `食谱: ${r.name}\n评分: ${score}星\n评价: ${text}`;
+                window.location.href = `mailto:${config.email}?subject=食谱评价:${r.name}&body=${encodeURIComponent(body)}`;
+                this.closeModal('reviewModal');
+            },
+
+            // --- Feedback Logic ---
+            sendFeedback() {
+                const text = document.getElementById('feedbackText').value;
+                if (!text) return alert("请填写内容");
+                const body = `用户反馈:\n${text}`;
+                window.location.href = `mailto:${config.email}?subject=破壁机助手反馈&body=${encodeURIComponent(body)}`;
+                this.closeModal('feedbackModal');
+                document.getElementById('feedbackText').value = '';
+            },
+
+            // --- Lucky Logic ---
+            startLucky() {
+                const mood = document.getElementById('luckyMood').value;
+                const weather = document.getElementById('luckyWeather').value;
+                const sign = document.getElementById('luckySign').value;
+                const zodiac = document.getElementById('luckyZodiac').value;
+                
+                const btn = document.getElementById('luckyStartBtn');
+                const slot = document.getElementById('slotMachine');
+                
+                let allKeywords = [];
+                if (config.keywords[mood]) allKeywords = allKeywords.concat(config.keywords[mood]);
+                if (config.keywords[weather]) allKeywords = allKeywords.concat(config.keywords[weather]);
+                if (config.keywords[sign]) allKeywords = allKeywords.concat(config.keywords[sign]);
+                if (config.keywords[zodiac]) allKeywords = allKeywords.concat(config.keywords[zodiac]);
+
+                let pool = recipes;
+                if (allKeywords.length > 0) {
+                    const filtered = recipes.filter(r => {
+                        const str = JSON.stringify(r).toLowerCase();
+                        return allKeywords.some(k => str.includes(k));
+                    });
+                    if (filtered.length > 0) pool = filtered;
+                }
+
+                btn.classList.add('hidden');
+                let count = 0;
+                const interval = setInterval(() => {
+                    const r = pool[Math.floor(Math.random() * pool.length)];
+                    slot.innerText = r.name;
+                    count++;
+                    if (count > 15) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            this.closeModal('luckyModal');
+                            this.openDetail(r.id);
+                            btn.classList.remove('hidden');
+                            slot.innerText = "";
+                        }, 600);
+                    }
+                }, 80);
+            },
+
+            // --- Mine & Upload ---
+            openMine() {
+                document.getElementById('homeView').classList.add('hidden');
+                document.getElementById('listView').classList.add('hidden');
+                document.getElementById('mineView').classList.remove('hidden');
+                this.switchMineTab('fav');
+            },
+
+            switchMineTab(tab, el) {
+                if(el) {
+                    document.querySelectorAll('.mine-tab').forEach(e => e.classList.remove('active'));
+                    el.classList.add('active');
+                } else {
+                    document.querySelectorAll('.mine-tab').forEach(e => e.classList.remove('active'));
+                    document.querySelector('.mine-tab').classList.add('active');
+                }
+
+                const container = document.getElementById('mineContent');
+                let list = [];
+                let html = '';
+
+                if (tab === 'fav') {
+                    list = recipes.filter(r => this.state.favs.includes(r.id));
+                    html = list.map(r => this.mineItemHtml(r, 'fav')).join('');
+                } else if (tab === 'rate') {
+                    list = recipes.filter(r => this.state.ratings[r.id]);
+                    html = list.map(r => this.mineItemHtml(r, 'rate')).join('');
+                } else if (tab === 'upload') {
+                    list = this.state.uploads;
+                    html = `<button class="btn-primary touch-scale" onclick="app.openModal('uploadModal')" style="margin-bottom:16px; background:white; color:var(--accent-color); border:2px dashed #E0E0E0;">+ 上传新食谱</button>` +
+                           list.map((u, i) => this.mineItemHtml(u, 'upload', i)).join('');
+                }
+
+                if (!html || (tab === 'upload' && list.length === 0)) html += `<div style="text-align:center; padding:40px; color:var(--text-secondary);">暂无内容</div>`;
+                container.innerHTML = html;
+            },
+
+            mineItemHtml(item, type, idx) {
+                if (type === 'upload') {
+                    return `
+                    <div class="mine-item">
+                        <div>
+                            <div style="font-weight:600">${item.name}</div>
+                            <div style="font-size:12px; color:var(--text-secondary)">审核中...</div>
+                        </div>
+                        <i class="fa-solid fa-trash touch-scale" style="color:var(--danger-color)" onclick="app.delUpload(${idx})"></i>
+                    </div>`;
+                }
+                
+                // 评分列表增加删除按钮
+                if (type === 'rate') {
+                    return `
+                    <div class="mine-item">
+                        <div class="touch-scale" style="flex:1" onclick="app.openDetail(${item.id})">
+                            <div style="font-weight:600">${item.name}</div>
+                            <div style="font-size:12px; color:var(--text-secondary)">${this.state.ratings[item.id]}星评价</div>
+                        </div>
+                        <i class="fa-solid fa-trash touch-scale" style="color:#C7C7CC; padding:10px" onclick="app.delRate(${item.id})"></i>
+                    </div>`;
+                }
+                
+                // 收藏列表
+                return `
+                <div class="mine-item touch-scale" onclick="app.openDetail(${item.id})">
+                    <div>
+                        <div style="font-weight:600">${item.name}</div>
+                        <div style="font-size:12px; color:var(--text-secondary)">${item.category}</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right" style="color:#E0E0E0"></i>
+                </div>`;
+            },
+
+            submitUpload() {
+                const name = document.getElementById('upName').value;
+                const cat = document.getElementById('upCat').value;
+                if(!name) return alert('请填写名称');
+                
+                this.state.uploads.push({ id: Date.now(), name, category: cat });
+                localStorage.setItem('uploads', JSON.stringify(this.state.uploads));
+                
+                const body = `名称: ${name}\n分类: ${cat}`;
+                window.location.href = `mailto:${config.email}?subject=上传食谱:${name}&body=${encodeURIComponent(body)}`;
+
+                this.closeModal('uploadModal');
+                document.getElementById('upName').value = '';
+                this.switchMineTab('upload');
+            },
+
+            delUpload(idx) {
+                this.state.uploads.splice(idx, 1);
+                localStorage.setItem('uploads', JSON.stringify(this.state.uploads));
+                this.switchMineTab('upload');
+            },
+
+            // --- Modal & Swipe Logic ---
+            openModal(id) { document.getElementById(id).classList.add('open'); },
+            closeModal(id) { document.getElementById(id).classList.remove('open'); },
+
+            bindSwipe() {
+                const modals = document.querySelectorAll('.modal-sheet');
+                modals.forEach(modal => {
+                    let startX = 0;
+                    let startY = 0;
+                    
+                    modal.addEventListener('touchstart', e => {
+                        startX = e.changedTouches[0].screenX;
+                        startY = e.changedTouches[0].screenY;
+                    }, {passive: true});
+
+                    modal.addEventListener('touchend', e => {
+                        const endX = e.changedTouches[0].screenX;
+                        const endY = e.changedTouches[0].screenY;
+                        const diffX = endX - startX;
+                        const diffY = endY - startY;
+
+                        if (diffX > 80 && Math.abs(diffX) > Math.abs(diffY)) {
+                            const parentId = modal.parentElement.id;
+                            app.closeModal(parentId);
+                        }
+                    });
+                });
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>
